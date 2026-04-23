@@ -28,6 +28,11 @@ def create_app(
     @app.post("/switch")
     def switch_ip():
         target_ip = request.form.get("target_ip", "")
+        state = current_app.extensions["dashboard_service"].build_state()
+        if target_ip not in state.candidate_ips:
+            flash("目标 IP 不在当前候选列表中", "error")
+            return redirect(url_for("index"))
+
         try:
             normalized_target = current_app.extensions["switch_service"].switch_ip(target_ip)
         except ValueError as exc:

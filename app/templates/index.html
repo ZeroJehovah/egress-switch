@@ -75,25 +75,6 @@
           <p class="empty">当前没有读取到可切换 IP，请检查网卡名、子网前缀或系统权限。</p>
         {% endif %}
       </section>
-
-      <section class="panel">
-        <div class="section-head">
-          <div>
-            <p class="label">手动输入</p>
-            <h2>直接切换到指定地址</h2>
-          </div>
-        </div>
-        <form method="post" action="{{ url_for('switch_ip') }}" class="manual-form">
-          <input
-            id="target_ip"
-            name="target_ip"
-            type="text"
-            placeholder="例如 145 或 10.0.0.145"
-            autocomplete="off"
-          >
-          <button type="submit">执行切换</button>
-        </form>
-      </section>
     </main>
   </body>
 </html>

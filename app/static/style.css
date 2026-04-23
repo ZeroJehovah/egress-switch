@@ -161,30 +161,6 @@ input {
   background: rgba(18, 71, 52, 0.16);
 }
 
-.manual-form {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.manual-form input {
-  flex: 1 1 320px;
-  min-width: 0;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.85);
-}
-
-.manual-form button {
-  border: 0;
-  padding: 14px 18px;
-  border-radius: 14px;
-  background: var(--brand);
-  color: white;
-  cursor: pointer;
-}
-
 .messages {
   display: grid;
   gap: 12px;

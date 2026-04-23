@@ -52,6 +52,8 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "出口 IP 切换面板" in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
+    assert "直接切换到指定地址" not in body
+    assert "例如 145 或 10.0.0.145" not in body
 
 
 def test_switch_route_redirects_and_flashes(tmp_path: Path):
@@ -64,3 +66,15 @@ def test_switch_route_redirects_and_flashes(tmp_path: Path):
     assert response.status_code == 200
     assert fake_switch_service.last_target == "10.0.0.11"
     assert "已切换到 10.0.0.11" in response.get_data(as_text=True)
+
+
+def test_switch_route_rejects_non_candidate_target(tmp_path: Path):
+    fake_switch_service = FakeSwitchService()
+    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    client = app.test_client()
+
+    response = client.post("/switch", data={"target_ip": "10.0.0.145"}, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert fake_switch_service.last_target is None
+    assert "目标 IP 不在当前候选列表中" in response.get_data(as_text=True)
