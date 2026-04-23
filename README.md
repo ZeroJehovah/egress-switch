@@ -60,6 +60,69 @@ cp .env.example .env
 
 启动脚本会自动创建虚拟环境并安装依赖。
 
+## 开机自启动
+
+推荐使用 `systemd` 托管现有脚本。
+
+1. 创建服务文件
+
+```bash
+sudo nano /etc/systemd/system/switch-ip.service
+```
+
+将下面内容写入服务文件，并把 `/path/to/egress-switch` 替换为你的实际部署目录：
+
+```ini
+[Unit]
+Description=Sing-box Egress Switch
+After=network-online.target sing-box.service
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=root
+WorkingDirectory=/path/to/egress-switch
+PIDFile=/path/to/egress-switch/.run/switch-ip.pid
+ExecStart=/path/to/egress-switch/scripts/start.sh
+ExecStop=/path/to/egress-switch/scripts/stop.sh
+ExecReload=/path/to/egress-switch/scripts/restart.sh
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=120
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+```
+
+说明：
+
+- 这里使用 `Type=forking`，因为 `scripts/start.sh` 会在后台启动 Web 进程并写入 PID 文件。
+- 这里使用 `User=root`，因为切换功能需要修改 sing-box 配置并重启 `sing-box` 服务。
+
+2. 重新加载 `systemd` 并设置开机启动
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now switch-ip
+```
+
+3. 查看运行状态
+
+```bash
+sudo systemctl status switch-ip
+sudo journalctl -u switch-ip -f
+```
+
+4. 常用管理命令
+
+```bash
+sudo systemctl restart switch-ip
+sudo systemctl stop switch-ip
+sudo systemctl start switch-ip
+sudo systemctl disable switch-ip
+```
+
 ## 使用
 
 启动后，可通过以下地址访问：
