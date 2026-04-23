@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>switch-ip</title>
+    <title>Sing-box Egress Switch</title>
     <script>
       (() => {
         try {
@@ -114,7 +114,7 @@
 
               <div class="stat-group">
                 <p class="stat-label">更新时间</p>
-                <p class="stat-text">{{ state.public_ipv4_updated_at or "暂无缓存" }}</p>
+                <p class="stat-text">{{ format_display_datetime(state.public_ipv4_updated_at) or "暂无缓存" }}</p>
               </div>
 
               <div class="stat-group">
@@ -240,7 +240,7 @@
       </main>
 
       <footer class="footer">
-        Sing-box Egress Switch v1.0.0 | 仅供合法用途使用
+        Sing-box Egress Switch v1.0.0
       </footer>
     </div>
   </body>

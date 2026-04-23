@@ -90,6 +90,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
 
     assert response.status_code == 200
     body = response.get_data(as_text=True)
+    assert "<title>Sing-box Egress Switch</title>" in body
     assert "Sing-box Egress Switch" in body
     assert 'rel="icon"' in body
     assert 'href="/static/favicon.ico?v=' in body
@@ -105,7 +106,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "10.0.0.11" in body
     assert "203.0.113.10" in body
     assert "更新时间" in body
-    assert "2026-04-23T10:00:00+00:00" in body
+    assert "2026-04-23 18:00:00" in body
     assert "切换到下一个 IP" in body
     assert "下一个 IP" in body
     assert "10.0.0.11" in body
@@ -120,6 +121,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "切换脚本" not in body
     assert "直接切换到指定地址" not in body
     assert "例如 145 或 10.0.0.145" not in body
+    assert "仅供合法用途使用" not in body
 
 
 def test_switch_route_redirects_and_flashes(tmp_path: Path):

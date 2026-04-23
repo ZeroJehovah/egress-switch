@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ipaddress
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from flask import Flask, current_app, flash, redirect, render_template, request, url_for
@@ -8,6 +9,8 @@ from flask import Flask, current_app, flash, redirect, render_template, request,
 from app.config import Settings
 from app.services import DashboardService, PublicIPv4Service, SwitchExecutionError, SwitchService
 from app.services.native_switcher import read_direct_bind_address
+
+DISPLAY_TIMEZONE = timezone(timedelta(hours=8))
 
 
 def get_next_candidate_ip(current_ip: str | None, candidate_ips: list[str]) -> str | None:
@@ -62,6 +65,21 @@ def _build_static_asset_url(filename: str) -> str:
         return url_for("static", filename=filename)
 
     return url_for("static", filename=filename, v=asset_path.stat().st_mtime_ns)
+
+
+def _format_display_datetime(raw_value: str | None) -> str | None:
+    if not raw_value:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(raw_value)
+    except ValueError:
+        return raw_value
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+
+    return parsed.astimezone(DISPLAY_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _normalize_client_ip(raw_value: str | None) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
@@ -151,6 +169,7 @@ def create_app(
     app.extensions["switch_service"] = switch_service or SwitchService(settings)
     app.extensions["public_ip_service"] = getattr(resolved_dashboard_service, "public_ip_service", PublicIPv4Service(settings))
     app.add_template_global(_build_static_asset_url, name="static_asset_url")
+    app.add_template_global(_format_display_datetime, name="format_display_datetime")
 
     @app.before_request
     def enforce_web_access_ip_whitelist():
