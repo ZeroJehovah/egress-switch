@@ -2,22 +2,38 @@
   const refreshDelayMs = 1500;
   const healthcheckIntervalMs = 2500;
   const healthcheckPath = "/healthz";
+  const themeStorageKey = "switch-ip-theme";
+
   const progressNode = document.querySelector("#switch-progress");
   const switchForms = document.querySelectorAll("[data-ajax-switch-form]");
   const nextSwitchForms = document.querySelectorAll("[data-ajax-switch-next-form]");
-
-  if (switchForms.length === 0 && nextSwitchForms.length === 0) {
-    return;
-  }
+  const searchInput = document.querySelector("[data-ip-search]");
+  const ipRows = Array.from(document.querySelectorAll("[data-ip-row]"));
+  const emptySearchNode = document.querySelector("[data-ip-empty]");
+  const refreshButton = document.querySelector("[data-refresh-page]");
+  const themeButton = document.querySelector("[data-theme-toggle]");
 
   let switchInFlight = false;
   let healthcheckTimerId = null;
+
+  const applyTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(themeStorageKey, theme);
+  };
+
+  const initializeTheme = () => {
+    const savedTheme = window.localStorage.getItem(themeStorageKey);
+    if (savedTheme === "night" || savedTheme === "light") {
+      applyTheme(savedTheme);
+    }
+  };
 
   const setButtonsDisabled = (disabled) => {
     document.querySelectorAll("button").forEach((button) => {
       if (button.dataset.preserveDisabled === "true") {
         return;
       }
+
       if (disabled) {
         button.dataset.originalDisabled = button.disabled ? "true" : "false";
         button.disabled = true;
@@ -29,10 +45,9 @@
   };
 
   const showProgress = () => {
-    if (!progressNode) {
-      return;
+    if (progressNode) {
+      progressNode.hidden = false;
     }
-    progressNode.hidden = false;
   };
 
   const startRefreshPolling = () => {
@@ -81,6 +96,30 @@
     startRefreshPolling();
   };
 
+  const updateSearchResults = () => {
+    if (!searchInput || ipRows.length === 0) {
+      return;
+    }
+
+    const keyword = searchInput.value.trim().toLowerCase();
+    let visibleCount = 0;
+
+    ipRows.forEach((row) => {
+      const value = (row.dataset.ipValue || "").toLowerCase();
+      const visible = value.includes(keyword);
+      row.hidden = !visible;
+      if (visible) {
+        visibleCount += 1;
+      }
+    });
+
+    if (emptySearchNode) {
+      emptySearchNode.hidden = visibleCount !== 0;
+    }
+  };
+
+  initializeTheme();
+
   switchForms.forEach((form) => {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -95,5 +134,29 @@
       event.preventDefault();
       sendAjaxSwitch("/api/switch/next", new URLSearchParams());
     });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener("input", updateSearchResults);
+    updateSearchResults();
+  }
+
+  if (refreshButton) {
+    refreshButton.addEventListener("click", () => {
+      window.location.reload();
+    });
+  }
+
+  if (themeButton) {
+    themeButton.addEventListener("click", () => {
+      const nextTheme = document.documentElement.dataset.theme === "night" ? "light" : "night";
+      applyTheme(nextTheme);
+    });
+  }
+
+  window.addEventListener("beforeunload", () => {
+    if (healthcheckTimerId !== null) {
+      window.clearTimeout(healthcheckTimerId);
+    }
   });
 })();

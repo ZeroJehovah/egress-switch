@@ -52,16 +52,26 @@ def test_index_page_renders_dashboard(tmp_path: Path):
 
     assert response.status_code == 200
     body = response.get_data(as_text=True)
+    assert "Sing-box Egress Switch" in body
+    assert "服务运行中" in body
     assert "出口 IP 切换面板" in body
+    assert "当前状态" in body
+    assert "快速操作" in body
+    assert "搜索 IP 地址..." in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
     assert "203.0.113.10" in body
-    assert "更新时间：2026-04-23T10:00:00+00:00" in body
+    assert "更新时间" in body
+    assert "2026-04-23T10:00:00+00:00" in body
     assert "切换到下一个 IP" in body
-    assert "下一个：10.0.0.11" in body
+    assert "下一个 IP" in body
+    assert "10.0.0.11" in body
     assert "switch-progress" in body
     assert 'data-ajax-switch-form' in body
     assert 'data-ajax-switch-next-form' in body
+    assert 'data-ip-search' in body
+    assert 'data-refresh-page' in body
+    assert 'data-theme-toggle' in body
     assert "切换脚本" not in body
     assert "直接切换到指定地址" not in body
     assert "例如 145 或 10.0.0.145" not in body
