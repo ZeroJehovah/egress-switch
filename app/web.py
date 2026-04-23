@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from flask import Flask, current_app, flash, redirect, render_template, request, url_for
 
 from app.config import Settings
@@ -48,6 +50,18 @@ def _get_requested_target_ip() -> str:
     return payload.get("target_ip", "")
 
 
+def _build_static_asset_url(filename: str) -> str:
+    static_folder = current_app.static_folder
+    if not static_folder:
+        return url_for("static", filename=filename)
+
+    asset_path = Path(static_folder, filename)
+    if not asset_path.is_file():
+        return url_for("static", filename=filename)
+
+    return url_for("static", filename=filename, v=asset_path.stat().st_mtime_ns)
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -61,6 +75,7 @@ def create_app(
     app.extensions["settings"] = settings
     app.extensions["dashboard_service"] = dashboard_service or DashboardService(settings)
     app.extensions["switch_service"] = switch_service or SwitchService(settings)
+    app.add_template_global(_build_static_asset_url, name="static_asset_url")
 
     @app.get("/")
     def index():
