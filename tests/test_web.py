@@ -101,3 +101,41 @@ def test_get_next_candidate_ip_wraps_to_first():
 
 def test_get_next_candidate_ip_uses_first_when_current_missing():
     assert get_next_candidate_ip(None, ["10.0.0.10", "10.0.0.11"]) == "10.0.0.10"
+
+
+def test_switch_next_api_returns_json(tmp_path: Path):
+    fake_switch_service = FakeSwitchService()
+    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    client = app.test_client()
+
+    response = client.post("/api/switch/next")
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "status": "ok",
+        "target_ip": "10.0.0.11",
+        "message": "已轮换到下一个 IP: 10.0.0.11",
+    }
+
+
+def test_switch_next_api_returns_error_when_no_candidates(tmp_path: Path):
+    class EmptyDashboardService:
+        def build_state(self):
+            return DashboardState(
+                current_ip=None,
+                candidate_ips=[],
+                errors=[],
+                interface="enp0s6",
+                config_path="/etc/sing-box/config.json",
+            )
+
+    app = create_app(build_settings(tmp_path), dashboard_service=EmptyDashboardService(), switch_service=FakeSwitchService())
+    client = app.test_client()
+
+    response = client.post("/api/switch/next")
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "status": "error",
+        "message": "当前没有可切换的候选 IP",
+    }

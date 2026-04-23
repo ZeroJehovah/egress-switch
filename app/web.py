@@ -18,6 +18,28 @@ def get_next_candidate_ip(current_ip: str | None, candidate_ips: list[str]) -> s
     return candidate_ips[next_index]
 
 
+def _switch_to_target(target_ip: str) -> tuple[bool, str, str | None]:
+    try:
+        normalized_target = current_app.extensions["switch_service"].switch_ip(target_ip)
+    except ValueError as exc:
+        return False, str(exc), None
+    except FileNotFoundError as exc:
+        return False, str(exc), None
+    except SwitchExecutionError as exc:
+        return False, str(exc), None
+
+    return True, "", normalized_target
+
+
+def _switch_to_next_candidate() -> tuple[bool, str, str | None]:
+    state = current_app.extensions["dashboard_service"].build_state()
+    next_ip = get_next_candidate_ip(state.current_ip, state.candidate_ips)
+    if next_ip is None:
+        return False, "当前没有可切换的候选 IP", None
+
+    return _switch_to_target(next_ip)
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -46,39 +68,38 @@ def create_app(
             flash("目标 IP 不在当前候选列表中", "error")
             return redirect(url_for("index"))
 
-        try:
-            normalized_target = current_app.extensions["switch_service"].switch_ip(target_ip)
-        except ValueError as exc:
-            flash(str(exc), "error")
-        except FileNotFoundError as exc:
-            flash(str(exc), "error")
-        except SwitchExecutionError as exc:
-            flash(str(exc), "error")
-        else:
+        success, message, normalized_target = _switch_to_target(target_ip)
+        if success:
             flash(f"已切换到 {normalized_target}", "success")
+        else:
+            flash(message, "error")
 
         return redirect(url_for("index"))
 
     @app.post("/switch/next")
     def switch_next_ip():
-        state = current_app.extensions["dashboard_service"].build_state()
-        next_ip = get_next_candidate_ip(state.current_ip, state.candidate_ips)
-        if next_ip is None:
-            flash("当前没有可切换的候选 IP", "error")
-            return redirect(url_for("index"))
-
-        try:
-            normalized_target = current_app.extensions["switch_service"].switch_ip(next_ip)
-        except ValueError as exc:
-            flash(str(exc), "error")
-        except FileNotFoundError as exc:
-            flash(str(exc), "error")
-        except SwitchExecutionError as exc:
-            flash(str(exc), "error")
-        else:
+        success, message, normalized_target = _switch_to_next_candidate()
+        if success:
             flash(f"已轮换到下一个 IP: {normalized_target}", "success")
+        else:
+            flash(message, "error")
 
         return redirect(url_for("index"))
+
+    @app.post("/api/switch/next")
+    def switch_next_ip_api():
+        success, message, normalized_target = _switch_to_next_candidate()
+        if success:
+            return {
+                "status": "ok",
+                "target_ip": normalized_target,
+                "message": f"已轮换到下一个 IP: {normalized_target}",
+            }
+
+        return {
+            "status": "error",
+            "message": message,
+        }, 400
 
     @app.get("/healthz")
     def healthz():

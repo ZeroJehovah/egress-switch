@@ -1,9 +1,66 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck disable=SC1091
-source "${SCRIPT_DIR}/common.sh"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_FILE="${ROOT_DIR}/.env"
+DEFAULT_HOST="0.0.0.0"
+DEFAULT_PORT="8080"
+DEFAULT_PID_FILE="${ROOT_DIR}/.run/switch-ip.pid"
+DEFAULT_LOG_FILE="${ROOT_DIR}/logs/switch-ip.log"
+
+load_env_file() {
+  if [[ ! -f "${ENV_FILE}" ]]; then
+    return
+  fi
+
+  set -a
+  # shellcheck disable=SC1090
+  source "${ENV_FILE}"
+  set +a
+}
+
+ensure_runtime_dirs() {
+  mkdir -p "${ROOT_DIR}/.run" "${ROOT_DIR}/logs"
+}
+
+resolve_runtime_settings() {
+  load_env_file
+  SWITCH_IP_HOST="${SWITCH_IP_HOST:-${DEFAULT_HOST}}"
+  SWITCH_IP_PORT="${SWITCH_IP_PORT:-${DEFAULT_PORT}}"
+  SWITCH_IP_PID_FILE="${SWITCH_IP_PID_FILE:-${DEFAULT_PID_FILE}}"
+  SWITCH_IP_LOG_FILE="${SWITCH_IP_LOG_FILE:-${DEFAULT_LOG_FILE}}"
+
+  if [[ "${SWITCH_IP_PID_FILE}" != /* ]]; then
+    SWITCH_IP_PID_FILE="${ROOT_DIR}/${SWITCH_IP_PID_FILE}"
+  fi
+
+  if [[ "${SWITCH_IP_LOG_FILE}" != /* ]]; then
+    SWITCH_IP_LOG_FILE="${ROOT_DIR}/${SWITCH_IP_LOG_FILE}"
+  fi
+
+  mkdir -p "$(dirname "${SWITCH_IP_PID_FILE}")" "$(dirname "${SWITCH_IP_LOG_FILE}")"
+}
+
+read_pid() {
+  local pid_file="$1"
+
+  if [[ ! -f "${pid_file}" ]]; then
+    return 1
+  fi
+
+  local pid
+  pid="$(tr -d '[:space:]' < "${pid_file}")"
+  if [[ -z "${pid}" ]]; then
+    return 1
+  fi
+
+  printf '%s\n' "${pid}"
+}
+
+is_running() {
+  local pid="$1"
+  kill -0 "${pid}" >/dev/null 2>&1
+}
 
 ensure_runtime_dirs
 resolve_runtime_settings
