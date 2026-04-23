@@ -29,9 +29,54 @@ ensure_python() {
   fi
 }
 
+create_venv() {
+  rm -rf "${VENV_DIR}"
+
+  if ! "${PYTHON_BIN}" -m venv "${VENV_DIR}"; then
+    rm -rf "${VENV_DIR}"
+    cat >&2 <<EOF
+错误: 创建 Python 虚拟环境失败。
+
+在 Debian/Ubuntu 上，请先安装 venv 组件，例如：
+  sudo apt install python3-venv
+
+如果你的系统使用的是特定 Python 小版本，也可能需要：
+  sudo apt install python3.12-venv
+EOF
+    exit 1
+  fi
+}
+
+venv_has_pip() {
+  "${VENV_DIR}/bin/python" -m pip --version >/dev/null 2>&1
+}
+
+repair_venv_pip() {
+  if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
+    return 1
+  fi
+
+  "${VENV_DIR}/bin/python" -m ensurepip --upgrade >/dev/null 2>&1
+}
+
 ensure_venv() {
-  if [[ ! -d "${VENV_DIR}" ]]; then
-    "${PYTHON_BIN}" -m venv "${VENV_DIR}"
+  if [[ ! -d "${VENV_DIR}" || ! -x "${VENV_DIR}/bin/python" ]]; then
+    create_venv
+  fi
+
+  if ! venv_has_pip; then
+    echo "检测到虚拟环境缺少 pip，正在尝试修复..."
+
+    if ! repair_venv_pip; then
+      echo "自动修复失败，正在重建虚拟环境..."
+      create_venv
+    fi
+
+    if ! venv_has_pip; then
+      echo "错误: 虚拟环境修复失败，仍然无法使用 pip" >&2
+      echo "请先安装 python3-venv 或对应版本的 python3.x-venv 后重试" >&2
+      exit 1
+    fi
   fi
 }
 
