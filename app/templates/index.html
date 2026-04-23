@@ -133,7 +133,8 @@
                 <h2>快速操作</h2>
               </div>
 
-              <form method="post" action="{{ url_for('switch_next_ip') }}" class="primary-action-form" data-ajax-switch-next-form>
+              <form method="post" action="{{ url_for('switch_ip') }}" class="primary-action-form" data-ajax-switch-next-form>
+                <input type="hidden" name="target_ip" value="{{ next_ip or '' }}">
                 <button type="submit" class="primary-action-button" {% if not next_ip %}disabled{% endif %}>
                   切换到下一个 IP
                 </button>

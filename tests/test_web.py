@@ -71,6 +71,8 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "切换到下一个 IP" in body
     assert "下一个 IP" in body
     assert "10.0.0.11" in body
+    assert 'action="/switch"' in body
+    assert 'action="/switch/next"' not in body
     assert "switch-progress" in body
     assert 'data-ajax-switch-form' in body
     assert 'data-ajax-switch-next-form' in body
@@ -147,6 +149,18 @@ def test_switch_next_route_rotates_to_next_candidate(tmp_path: Path):
     assert response.status_code == 200
     assert fake_switch_service.last_target == "10.0.0.11"
     assert "已轮换到下一个 IP: 10.0.0.11" in response.get_data(as_text=True)
+
+
+def test_quick_switch_form_posts_rendered_next_ip(tmp_path: Path):
+    fake_switch_service = FakeSwitchService()
+    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    client = app.test_client()
+
+    response = client.post("/switch", data={"target_ip": "10.0.0.11"}, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert fake_switch_service.last_target == "10.0.0.11"
+    assert "已切换到 10.0.0.11" in response.get_data(as_text=True)
 
 
 def test_get_next_candidate_ip_wraps_to_first():
