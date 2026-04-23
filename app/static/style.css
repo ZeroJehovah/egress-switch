@@ -205,6 +205,10 @@ input {
   margin-bottom: 20px;
 }
 
+.js-only[hidden] {
+  display: none;
+}
+
 .message {
   padding: 14px 16px;
   border-radius: 16px;
@@ -221,6 +225,12 @@ input {
   background: var(--success-bg);
   color: var(--success);
   border-color: rgba(15, 95, 66, 0.16);
+}
+
+.message.info {
+  background: rgba(29, 107, 79, 0.08);
+  color: var(--brand-strong);
+  border-color: rgba(29, 107, 79, 0.14);
 }
 
 .error-list,

@@ -40,6 +40,14 @@ def _switch_to_next_candidate() -> tuple[bool, str, str | None]:
     return _switch_to_target(next_ip)
 
 
+def _get_requested_target_ip() -> str:
+    if request.form:
+        return request.form.get("target_ip", "")
+
+    payload = request.get_json(silent=True) or {}
+    return payload.get("target_ip", "")
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -62,7 +70,7 @@ def create_app(
 
     @app.post("/switch")
     def switch_ip():
-        target_ip = request.form.get("target_ip", "")
+        target_ip = _get_requested_target_ip()
         state = current_app.extensions["dashboard_service"].build_state()
         if target_ip not in state.candidate_ips:
             flash("目标 IP 不在当前候选列表中", "error")
@@ -75,6 +83,29 @@ def create_app(
             flash(message, "error")
 
         return redirect(url_for("index"))
+
+    @app.post("/api/switch")
+    def switch_ip_api():
+        target_ip = _get_requested_target_ip()
+        state = current_app.extensions["dashboard_service"].build_state()
+        if target_ip not in state.candidate_ips:
+            return {
+                "status": "error",
+                "message": "目标 IP 不在当前候选列表中",
+            }, 400
+
+        success, message, normalized_target = _switch_to_target(target_ip)
+        if success:
+            return {
+                "status": "ok",
+                "target_ip": normalized_target,
+                "message": f"已切换到 {normalized_target}",
+            }
+
+        return {
+            "status": "error",
+            "message": message,
+        }, 400
 
     @app.post("/switch/next")
     def switch_next_ip():

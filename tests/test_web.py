@@ -59,6 +59,9 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "更新时间：2026-04-23T10:00:00+00:00" in body
     assert "切换到下一个 IP" in body
     assert "下一个：10.0.0.11" in body
+    assert "switch-progress" in body
+    assert 'data-ajax-switch-form' in body
+    assert 'data-ajax-switch-next-form' in body
     assert "切换脚本" not in body
     assert "直接切换到指定地址" not in body
     assert "例如 145 或 10.0.0.145" not in body
@@ -86,6 +89,37 @@ def test_switch_route_rejects_non_candidate_target(tmp_path: Path):
     assert response.status_code == 200
     assert fake_switch_service.last_target is None
     assert "目标 IP 不在当前候选列表中" in response.get_data(as_text=True)
+
+
+def test_switch_api_returns_json_on_success(tmp_path: Path):
+    fake_switch_service = FakeSwitchService()
+    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    client = app.test_client()
+
+    response = client.post("/api/switch", data={"target_ip": "10.0.0.11"})
+
+    assert response.status_code == 200
+    assert fake_switch_service.last_target == "10.0.0.11"
+    assert response.get_json() == {
+        "status": "ok",
+        "target_ip": "10.0.0.11",
+        "message": "已切换到 10.0.0.11",
+    }
+
+
+def test_switch_api_rejects_non_candidate_target(tmp_path: Path):
+    fake_switch_service = FakeSwitchService()
+    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    client = app.test_client()
+
+    response = client.post("/api/switch", data={"target_ip": "10.0.0.145"})
+
+    assert response.status_code == 400
+    assert fake_switch_service.last_target is None
+    assert response.get_json() == {
+        "status": "error",
+        "message": "目标 IP 不在当前候选列表中",
+    }
 
 
 def test_switch_next_route_rotates_to_next_candidate(tmp_path: Path):

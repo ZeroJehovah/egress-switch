@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>switch-ip</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script defer src="{{ url_for('static', filename='app.js') }}"></script>
   </head>
   <body>
     <main class="layout">
@@ -23,6 +24,12 @@
           </section>
         {% endif %}
       {% endwith %}
+
+      <section class="messages js-only" hidden id="switch-progress">
+        <article class="message info">
+          切换请求已发送。若连接暂时中断属于预期行为，页面会在服务恢复后自动刷新。
+        </article>
+      </section>
 
       {% if state.errors %}
         <section class="panel">
@@ -50,7 +57,7 @@
         </div>
         <div class="meta">
           <p>配置文件：{{ state.config_path }}</p>
-          <form method="post" action="{{ url_for('switch_next_ip') }}" class="next-ip-form">
+          <form method="post" action="{{ url_for('switch_next_ip') }}" class="next-ip-form" data-ajax-switch-next-form>
             <button type="submit" class="next-ip-button" {% if not next_ip %}disabled{% endif %}>
               切换到下一个 IP
             </button>
@@ -73,7 +80,7 @@
         {% if state.candidate_ips %}
           <div class="ip-grid">
             {% for ip in state.candidate_ips %}
-              <form method="post" action="{{ url_for('switch_ip') }}" class="ip-card-form">
+              <form method="post" action="{{ url_for('switch_ip') }}" class="ip-card-form" data-ajax-switch-form>
                 <input type="hidden" name="target_ip" value="{{ ip }}">
                 <button type="submit" class="ip-card" {% if ip == state.current_ip %}disabled{% endif %}>
                   <span class="ip-address">{{ ip }}</span>
