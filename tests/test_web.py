@@ -9,6 +9,9 @@ class FakeDashboardService:
     def build_state(self):
         return DashboardState(
             current_ip="10.0.0.10",
+            public_ipv4="203.0.113.10",
+            public_ipv4_updated_at="2026-04-23T10:00:00+00:00",
+            public_ipv4_error=None,
             candidate_ips=["10.0.0.10", "10.0.0.11"],
             errors=[],
             interface="enp0s6",
@@ -52,6 +55,8 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "出口 IP 切换面板" in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
+    assert "203.0.113.10" in body
+    assert "更新时间：2026-04-23T10:00:00+00:00" in body
     assert "切换到下一个 IP" in body
     assert "下一个：10.0.0.11" in body
     assert "切换脚本" not in body
@@ -123,6 +128,9 @@ def test_switch_next_api_returns_error_when_no_candidates(tmp_path: Path):
         def build_state(self):
             return DashboardState(
                 current_ip=None,
+                public_ipv4=None,
+                public_ipv4_updated_at=None,
+                public_ipv4_error=None,
                 candidate_ips=[],
                 errors=[],
                 interface="enp0s6",

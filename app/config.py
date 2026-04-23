@@ -35,6 +35,8 @@ class Settings:
     helper_path: Path
     command_timeout: int
     debug: bool
+    public_ip_api_url: str = "https://api.ipify.org?format=json"
+    public_ip_cache_path: Path = BASE_DIR / ".run/public-ip-cache.json"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -57,4 +59,9 @@ class Settings:
             ),
             command_timeout=int(os.getenv("SWITCH_IP_COMMAND_TIMEOUT", "60")),
             debug=_as_bool(os.getenv("SWITCH_IP_DEBUG"), default=False),
+            public_ip_api_url=os.getenv("SWITCH_IP_PUBLIC_IP_API_URL", "https://api.ipify.org?format=json"),
+            public_ip_cache_path=_resolve_path(
+                os.getenv("SWITCH_IP_PUBLIC_IP_CACHE_PATH", ".run/public-ip-cache.json"),
+                BASE_DIR,
+            ),
         )

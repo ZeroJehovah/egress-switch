@@ -39,6 +39,14 @@
         <div>
           <p class="label">当前绑定 IP</p>
           <p class="current-value">{{ state.current_ip or "未读取到" }}</p>
+          <p class="label public-label">当前公网 IPv4</p>
+          <p class="public-value">{{ state.public_ipv4 or "未获取" }}</p>
+          {% if state.public_ipv4_updated_at %}
+            <p class="public-meta">更新时间：{{ state.public_ipv4_updated_at }}</p>
+          {% endif %}
+          {% if state.public_ipv4_error %}
+            <p class="public-error">{{ state.public_ipv4_error }}</p>
+          {% endif %}
         </div>
         <div class="meta">
           <p>配置文件：{{ state.config_path }}</p>

@@ -4,6 +4,17 @@ from subprocess import CompletedProcess
 
 from app.config import Settings
 from app.services.dashboard_service import DashboardService
+from app.services.public_ip_service import PublicIPv4CacheEntry
+
+
+class FakePublicIPService:
+    def __init__(self, entry: PublicIPv4CacheEntry | None = None):
+        self.entry = entry
+
+    def read_cache_for_bind_ip(self, bind_ip: str | None):
+        if self.entry is None or bind_ip != self.entry.bind_ip:
+            return None
+        return self.entry
 
 
 def build_settings(tmp_path: Path) -> Settings:
@@ -25,7 +36,7 @@ def build_settings(tmp_path: Path) -> Settings:
 
 
 def test_dashboard_reads_current_bind_ip(tmp_path: Path):
-    service = DashboardService(build_settings(tmp_path))
+    service = DashboardService(build_settings(tmp_path), public_ip_service=FakePublicIPService())
     assert service.read_current_bind_ip() == "10.0.0.11"
 
 
@@ -46,7 +57,7 @@ def test_dashboard_lists_candidate_ips(tmp_path: Path):
             stderr="",
         )
 
-    service = DashboardService(settings, runner=fake_runner)
+    service = DashboardService(settings, runner=fake_runner, public_ip_service=FakePublicIPService())
     assert service.list_candidate_ips() == ["10.0.0.10", "10.0.0.15"]
 
 
@@ -69,7 +80,27 @@ def test_dashboard_collects_runtime_errors(tmp_path: Path):
     def fake_runner(command, timeout):
         return CompletedProcess(command, 1, stdout="", stderr="device not found")
 
-    state = DashboardService(settings, runner=fake_runner).build_state()
+    state = DashboardService(settings, runner=fake_runner, public_ip_service=FakePublicIPService()).build_state()
     assert state.current_ip is None
     assert state.candidate_ips == []
     assert len(state.errors) == 2
+
+
+def test_dashboard_reads_cached_public_ipv4(tmp_path: Path):
+    service = DashboardService(
+        build_settings(tmp_path),
+        public_ip_service=FakePublicIPService(
+            PublicIPv4CacheEntry(
+                bind_ip="10.0.0.11",
+                public_ipv4="203.0.113.11",
+                updated_at="2026-04-23T10:00:00+00:00",
+                error=None,
+            )
+        ),
+    )
+
+    state = service.build_state()
+
+    assert state.public_ipv4 == "203.0.113.11"
+    assert state.public_ipv4_updated_at == "2026-04-23T10:00:00+00:00"
+    assert state.public_ipv4_error is None

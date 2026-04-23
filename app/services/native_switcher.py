@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.config import Settings
+from app.services.public_ip_service import PublicIPv4Service
 
 
 def _default_runner(
@@ -36,6 +37,9 @@ class NativeSwitchOutcome:
     target_ip: str
     backup_path: Path
     current_ip: str | None
+    public_ipv4: str | None
+    public_ipv4_updated_at: str | None
+    public_ipv4_error: str | None
     service_status: str
     recent_logs: str
 
@@ -100,9 +104,15 @@ def list_interface_ipv4_addresses(
 
 
 class NativeSwitcher:
-    def __init__(self, settings: Settings, runner=_default_runner) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        runner=_default_runner,
+        public_ip_service: PublicIPv4Service | None = None,
+    ) -> None:
         self.settings = settings
         self.runner = runner
+        self.public_ip_service = public_ip_service or PublicIPv4Service(settings)
 
     def switch_ip(self, target_ip: str) -> NativeSwitchOutcome:
         config_path = Path(self.settings.singbox_config_path)
@@ -139,11 +149,26 @@ class NativeSwitcher:
             ["journalctl", "-u", self.settings.singbox_service_name, "-n", "8", "--no-pager"]
         )
         current_ip = read_direct_bind_address(config_path)
+        public_ipv4 = None
+        public_ipv4_updated_at = None
+        public_ipv4_error = None
+
+        try:
+            public_ip_entry = self.public_ip_service.refresh_cache(target_ip)
+        except Exception as exc:
+            public_ipv4_error = f"公网 IPv4 刷新失败: {exc}"
+        else:
+            public_ipv4 = public_ip_entry.public_ipv4
+            public_ipv4_updated_at = public_ip_entry.updated_at
+            public_ipv4_error = public_ip_entry.error
 
         return NativeSwitchOutcome(
             target_ip=target_ip,
             backup_path=backup_path,
             current_ip=current_ip,
+            public_ipv4=public_ipv4,
+            public_ipv4_updated_at=public_ipv4_updated_at,
+            public_ipv4_error=public_ipv4_error,
             service_status=service_status,
             recent_logs=recent_logs,
         )

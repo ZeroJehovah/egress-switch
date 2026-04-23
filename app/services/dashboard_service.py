@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from app.config import Settings
 from app.services.native_switcher import list_interface_ipv4_addresses, read_direct_bind_address
+from app.services.public_ip_service import PublicIPv4Service
 
 
 def _default_runner(command: list[str], timeout: int) -> subprocess.CompletedProcess[str]:
@@ -21,6 +22,9 @@ def _default_runner(command: list[str], timeout: int) -> subprocess.CompletedPro
 @dataclass(slots=True)
 class DashboardState:
     current_ip: str | None
+    public_ipv4: str | None
+    public_ipv4_updated_at: str | None
+    public_ipv4_error: str | None
     candidate_ips: list[str]
     errors: list[str]
     interface: str
@@ -28,9 +32,10 @@ class DashboardState:
 
 
 class DashboardService:
-    def __init__(self, settings: Settings, runner=_default_runner) -> None:
+    def __init__(self, settings: Settings, runner=_default_runner, public_ip_service: PublicIPv4Service | None = None) -> None:
         self.settings = settings
         self.runner = runner
+        self.public_ip_service = public_ip_service or PublicIPv4Service(settings)
 
     def build_state(self) -> DashboardState:
         errors: list[str] = []
@@ -47,8 +52,17 @@ class DashboardService:
             candidate_ips = []
             errors.append(f"读取网卡 IP 列表失败: {exc}")
 
+        try:
+            public_ip_entry = self.public_ip_service.read_cache_for_bind_ip(current_ip)
+        except Exception as exc:
+            public_ip_entry = None
+            errors.append(f"读取公网 IPv4 缓存失败: {exc}")
+
         return DashboardState(
             current_ip=current_ip,
+            public_ipv4=public_ip_entry.public_ipv4 if public_ip_entry else None,
+            public_ipv4_updated_at=public_ip_entry.updated_at if public_ip_entry else None,
+            public_ipv4_error=public_ip_entry.error if public_ip_entry else None,
             candidate_ips=candidate_ips,
             errors=errors,
             interface=self.settings.interface,

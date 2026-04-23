@@ -66,6 +66,16 @@ def main() -> int:
     print("当前 direct 出站绑定地址:")
     print(outcome.current_ip or read_direct_bind_address(settings.singbox_config_path) or "<未设置>")
     print()
+    print("当前公网 IPv4:")
+    if outcome.public_ipv4:
+        print(outcome.public_ipv4)
+        if outcome.public_ipv4_updated_at:
+            print(f"更新时间: {outcome.public_ipv4_updated_at}")
+    elif outcome.public_ipv4_error:
+        print(f"<获取失败: {outcome.public_ipv4_error}>")
+    else:
+        print("<未获取>")
+    print()
     print("最近日志:")
     print(outcome.recent_logs)
     return 0
