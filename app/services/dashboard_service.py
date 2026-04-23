@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import ipaddress
-import json
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
 
 from app.config import Settings
+from app.services.native_switcher import list_interface_ipv4_addresses, read_direct_bind_address
 
 
 def _default_runner(command: list[str], timeout: int) -> subprocess.CompletedProcess[str]:
@@ -26,7 +25,6 @@ class DashboardState:
     errors: list[str]
     interface: str
     config_path: str
-    helper_path: str
 
 
 class DashboardService:
@@ -55,31 +53,18 @@ class DashboardService:
             errors=errors,
             interface=self.settings.interface,
             config_path=str(self.settings.singbox_config_path),
-            helper_path=str(self.settings.helper_path),
         )
 
     def list_candidate_ips(self) -> list[str]:
-        result = self.runner(
-            ["ip", "-o", "-4", "addr", "show", "dev", self.settings.interface],
-            timeout=self.settings.command_timeout,
+        addresses = list_interface_ipv4_addresses(
+            self.settings.interface,
+            self.settings.command_timeout,
+            runner=self.runner,
         )
-        if result.returncode != 0:
-            detail = result.stderr.strip() or result.stdout.strip() or "命令执行失败"
-            raise RuntimeError(detail)
 
         prefix = f"{self.settings.subnet_prefix}."
         candidates: list[str] = []
-        for line in result.stdout.splitlines():
-            parts = line.split()
-            if len(parts) < 4:
-                continue
-
-            address = parts[3].split("/", 1)[0]
-            try:
-                ipaddress.IPv4Address(address)
-            except ValueError:
-                continue
-
+        for address in addresses:
             if self.settings.subnet_prefix and not address.startswith(prefix):
                 continue
             candidates.append(address)
@@ -87,12 +72,4 @@ class DashboardService:
         return sorted(set(candidates), key=ipaddress.IPv4Address)
 
     def read_current_bind_ip(self) -> str | None:
-        config_path = Path(self.settings.singbox_config_path)
-        data = json.loads(config_path.read_text(encoding="utf-8"))
-
-        for outbound in data.get("outbounds", []):
-            if outbound.get("tag") == "direct":
-                value = outbound.get("inet4_bind_address")
-                return str(value) if value else None
-
-        raise RuntimeError("没有找到 tag 为 direct 的 outbound")
+        return read_direct_bind_address(self.settings.singbox_config_path)

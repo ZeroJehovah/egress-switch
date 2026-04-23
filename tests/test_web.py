@@ -13,7 +13,6 @@ class FakeDashboardService:
             errors=[],
             interface="enp0s6",
             config_path="/etc/sing-box/config.json",
-            helper_path="/opt/helper.sh",
         )
 
 
@@ -33,6 +32,7 @@ def build_settings(tmp_path: Path) -> Settings:
         secret_key="test",
         singbox_config_path=tmp_path / "config.json",
         singbox_service_name="sing-box",
+        singbox_bin="sing-box",
         interface="enp0s6",
         subnet_prefix="10.0.0",
         helper_path=tmp_path / "helper.sh",
@@ -52,6 +52,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "出口 IP 切换面板" in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
+    assert "切换脚本" not in body
     assert "直接切换到指定地址" not in body
     assert "例如 145 或 10.0.0.145" not in body
 

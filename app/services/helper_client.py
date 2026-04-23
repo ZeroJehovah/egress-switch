@@ -32,11 +32,23 @@ class HelperClient:
         self.timeout = timeout
         self.runner = runner
 
-    def switch_ip(self, target_ip: str) -> HelperResult:
-        if not self.helper_path.exists():
-            raise FileNotFoundError(f"切换脚本不存在: {self.helper_path}")
+    def resolved_helper_path(self) -> Path:
+        if self.helper_path.exists():
+            return self.helper_path
 
-        result = self.runner([str(self.helper_path), target_ip], timeout=self.timeout)
+        if self.helper_path.suffix == ".sh":
+            fallback = self.helper_path.with_suffix(".py")
+            if fallback.exists():
+                return fallback
+
+        return self.helper_path
+
+    def switch_ip(self, target_ip: str) -> HelperResult:
+        helper_path = self.resolved_helper_path()
+        if not helper_path.exists():
+            raise FileNotFoundError(f"切换程序不存在: {helper_path}")
+
+        result = self.runner([str(helper_path), target_ip], timeout=self.timeout)
         return HelperResult(
             returncode=result.returncode,
             stdout=result.stdout,

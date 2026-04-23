@@ -23,6 +23,7 @@ def build_settings(tmp_path: Path) -> Settings:
         secret_key="test",
         singbox_config_path=tmp_path / "config.json",
         singbox_service_name="sing-box",
+        singbox_bin="sing-box",
         interface="enp0s6",
         subnet_prefix="10.0.0",
         helper_path=tmp_path / "helper.sh",

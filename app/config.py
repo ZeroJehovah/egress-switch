@@ -29,6 +29,7 @@ class Settings:
     secret_key: str
     singbox_config_path: Path
     singbox_service_name: str
+    singbox_bin: str
     interface: str
     subnet_prefix: str
     helper_path: Path
@@ -47,10 +48,11 @@ class Settings:
                 BASE_DIR,
             ),
             singbox_service_name=os.getenv("SINGBOX_SERVICE_NAME", "sing-box"),
+            singbox_bin=os.getenv("SINGBOX_BIN", "sing-box"),
             interface=os.getenv("SWITCH_IP_INTERFACE", "enp0s6"),
             subnet_prefix=os.getenv("SWITCH_IP_SUBNET_PREFIX", "10.0.0"),
             helper_path=_resolve_path(
-                os.getenv("SWITCH_IP_HELPER_PATH", "scripts/switch-egress-ip.sh"),
+                os.getenv("SWITCH_IP_HELPER_PATH", "scripts/switch-egress-ip.py"),
                 BASE_DIR,
             ),
             command_timeout=int(os.getenv("SWITCH_IP_COMMAND_TIMEOUT", "60")),
