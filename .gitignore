@@ -1,2 +1,7 @@
 AGENTS.md
 .codex
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc

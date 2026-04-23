@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>switch-ip</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <main class="layout">
+      <section class="hero">
+        <p class="eyebrow">Sing-box Egress Switch</p>
+        <h1>出口 IP 切换面板</h1>
+        <p class="summary">当前页面展示 sing-box `direct` 出站绑定 IP，以及 {{ state.interface }} 网卡上可切换的地址列表。</p>
+      </section>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="messages">
+            {% for category, message in messages %}
+              <article class="message {{ category }}">{{ message }}</article>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      {% if state.errors %}
+        <section class="panel">
+          <h2>运行时错误</h2>
+          <ul class="error-list">
+            {% for error in state.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      <section class="panel current-ip">
+        <div>
+          <p class="label">当前绑定 IP</p>
+          <p class="current-value">{{ state.current_ip or "未读取到" }}</p>
+        </div>
+        <div class="meta">
+          <p>配置文件：{{ state.config_path }}</p>
+          <p>切换脚本：{{ state.helper_path }}</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="label">候选出口 IP</p>
+            <h2>{{ state.interface }} 上的可用地址</h2>
+          </div>
+          <p class="count">{{ state.candidate_ips|length }} 个地址</p>
+        </div>
+
+        {% if state.candidate_ips %}
+          <div class="ip-grid">
+            {% for ip in state.candidate_ips %}
+              <form method="post" action="{{ url_for('switch_ip') }}" class="ip-card-form">
+                <input type="hidden" name="target_ip" value="{{ ip }}">
+                <button type="submit" class="ip-card" {% if ip == state.current_ip %}disabled{% endif %}>
+                  <span class="ip-address">{{ ip }}</span>
+                  {% if ip == state.current_ip %}
+                    <span class="badge active">当前使用中</span>
+                  {% else %}
+                    <span class="badge">切换到此地址</span>
+                  {% endif %}
+                </button>
+              </form>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty">当前没有读取到可切换 IP，请检查网卡名、子网前缀或系统权限。</p>
+        {% endif %}
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="label">手动输入</p>
+            <h2>直接切换到指定地址</h2>
+          </div>
+        </div>
+        <form method="post" action="{{ url_for('switch_ip') }}" class="manual-form">
+          <input
+            id="target_ip"
+            name="target_ip"
+            type="text"
+            placeholder="例如 145 或 10.0.0.145"
+            autocomplete="off"
+          >
+          <button type="submit">执行切换</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
