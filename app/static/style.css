@@ -17,27 +17,55 @@
   --info-soft: #eef5ff;
   --shadow: 0 18px 38px rgba(21, 51, 98, 0.08);
   --shadow-soft: 0 10px 22px rgba(29, 68, 129, 0.06);
+  --page-glow: rgba(47, 102, 243, 0.08);
+  --page-glow-secondary: rgba(47, 102, 243, 0.05);
+  --page-start: #f8fbff;
+  --page-end: #f4f7fb;
+  --topbar-bg: rgba(255, 255, 255, 0.9);
+  --control-bg: var(--panel);
+  --control-hover-bg: #f5f8fe;
+  --input-bg: var(--panel);
+  --service-pill-bg: #f2fbf5;
+  --service-pill-text: #2d5b34;
+  --table-button-bg: #ffffff;
+  --table-button-border: #b8ccff;
+  --table-row-hover: rgba(47, 102, 243, 0.04);
+  --brand-mark-shadow: 0 12px 26px rgba(47, 102, 243, 0.18);
 }
 
 :root[data-theme="night"] {
   color-scheme: dark;
-  --bg: #0f1726;
-  --panel: #162033;
-  --panel-soft: #111a2c;
-  --border: #26324a;
-  --border-strong: #33415c;
+  --bg: #0a1220;
+  --panel: #111a2b;
+  --panel-soft: #0d1625;
+  --border: #202d43;
+  --border-strong: #31415d;
   --text: #eef4ff;
-  --muted: #a8b5cb;
-  --brand: #7ca4ff;
-  --brand-strong: #9bb8ff;
-  --brand-soft: rgba(124, 164, 255, 0.12);
-  --success: #7bd79a;
-  --success-soft: rgba(123, 215, 154, 0.14);
+  --muted: #a6b1c5;
+  --brand: #4d8cff;
+  --brand-strong: #2c67f6;
+  --brand-soft: rgba(77, 140, 255, 0.15);
+  --success: #78d391;
+  --success-soft: rgba(120, 211, 145, 0.18);
   --danger: #ff9b9b;
   --danger-soft: rgba(255, 155, 155, 0.16);
-  --info-soft: rgba(124, 164, 255, 0.1);
-  --shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
-  --shadow-soft: 0 14px 28px rgba(0, 0, 0, 0.2);
+  --info-soft: rgba(77, 140, 255, 0.12);
+  --shadow: 0 24px 48px rgba(0, 0, 0, 0.32);
+  --shadow-soft: 0 14px 28px rgba(0, 0, 0, 0.24);
+  --page-glow: rgba(77, 140, 255, 0.16);
+  --page-glow-secondary: rgba(23, 47, 94, 0.28);
+  --page-start: #0f1726;
+  --page-end: #0a1220;
+  --topbar-bg: rgba(10, 16, 28, 0.9);
+  --control-bg: rgba(15, 23, 38, 0.9);
+  --control-hover-bg: rgba(21, 31, 48, 0.96);
+  --input-bg: rgba(12, 19, 32, 0.96);
+  --service-pill-bg: rgba(14, 23, 38, 0.95);
+  --service-pill-text: #e6edf9;
+  --table-button-bg: rgba(12, 19, 32, 0.96);
+  --table-button-border: rgba(77, 140, 255, 0.72);
+  --table-row-hover: rgba(77, 140, 255, 0.07);
+  --brand-mark-shadow: 0 12px 28px rgba(10, 16, 28, 0.3);
 }
 
 * {
@@ -52,15 +80,28 @@ body {
 body {
   margin: 0;
   font-family: "Plus Jakarta Sans", "IBM Plex Sans", "Noto Sans SC", "PingFang SC", sans-serif;
+  background-color: var(--bg);
   background:
-    radial-gradient(circle at top right, rgba(47, 102, 243, 0.08), transparent 22%),
-    linear-gradient(180deg, #f8fbff 0%, var(--bg) 18%);
+    radial-gradient(circle at top right, var(--page-glow), transparent 24%),
+    radial-gradient(circle at top left, var(--page-glow-secondary), transparent 18%),
+    linear-gradient(180deg, var(--page-start) 0%, var(--page-end) 22%);
   color: var(--text);
 }
 
 button,
 input {
   font: inherit;
+}
+
+button,
+input,
+a {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 svg {
@@ -89,13 +130,9 @@ svg {
   justify-content: space-between;
   gap: 16px;
   padding: 16px 22px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--topbar-bg);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(18px);
-}
-
-:root[data-theme="night"] .topbar {
-  background: rgba(22, 32, 51, 0.9);
 }
 
 .brand {
@@ -111,12 +148,16 @@ svg {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(180deg, var(--brand), var(--brand-strong));
-  color: #fff;
-  font-size: 0.84rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  box-shadow: var(--brand-mark-shadow);
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .brand-copy h1 {
@@ -143,19 +184,14 @@ svg {
   padding: 0 14px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: var(--panel);
+  background: var(--control-bg);
   color: var(--text);
-  box-shadow: var(--shadow-soft);
+  box-shadow: none;
 }
 
 .service-pill {
-  color: #2d5b34;
-  background: #f2fbf5;
-}
-
-:root[data-theme="night"] .service-pill {
-  color: #92dfab;
-  background: rgba(123, 215, 154, 0.12);
+  color: var(--service-pill-text);
+  background: var(--service-pill-bg);
 }
 
 .service-dot {
@@ -168,6 +204,14 @@ svg {
 .toolbar-button,
 .icon-button {
   cursor: pointer;
+}
+
+.toolbar-button:hover,
+.icon-button:hover,
+.toolbar-button:focus-visible,
+.icon-button:focus-visible {
+  background: var(--control-hover-bg);
+  border-color: var(--border-strong);
 }
 
 .toolbar-button {
@@ -388,6 +432,12 @@ svg {
   box-shadow: 0 14px 28px rgba(47, 102, 243, 0.22);
 }
 
+.primary-action-button:hover:not(:disabled),
+.primary-action-button:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 32px rgba(47, 102, 243, 0.26);
+}
+
 .primary-action-button:disabled {
   cursor: default;
   opacity: 0.6;
@@ -419,8 +469,21 @@ svg {
   padding: 0 44px 0 16px;
   border-radius: 14px;
   border: 1px solid var(--border-strong);
-  background: var(--panel);
+  background: var(--input-bg);
   color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.search-box input::placeholder {
+  color: var(--muted);
+}
+
+.search-box input:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow:
+    0 0 0 3px rgba(77, 140, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .search-box svg {
@@ -429,6 +492,7 @@ svg {
   right: 14px;
   transform: translateY(-50%);
   color: var(--muted);
+  pointer-events: none;
 }
 
 .table-shell {
@@ -457,6 +521,10 @@ svg {
   font-weight: 700;
 }
 
+.ip-table tbody tr:hover {
+  background: var(--table-row-hover);
+}
+
 .ip-table tbody tr:last-child td {
   border-bottom: 0;
 }
@@ -480,15 +548,18 @@ svg {
   min-height: 36px;
   padding: 0 16px;
   border-radius: 10px;
-  border: 1px solid #b8ccff;
-  background: #fff;
+  border: 1px solid var(--table-button-border);
+  background: var(--table-button-bg);
   color: var(--brand);
   font-weight: 700;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-:root[data-theme="night"] .table-action-button {
-  background: transparent;
+.table-action-button:hover:not(:disabled),
+.table-action-button:focus-visible:not(:disabled) {
+  background: var(--control-hover-bg);
+  border-color: var(--brand);
 }
 
 .table-action-button:disabled {

@@ -25,7 +25,11 @@
     const savedTheme = window.localStorage.getItem(themeStorageKey);
     if (savedTheme === "night" || savedTheme === "light") {
       applyTheme(savedTheme);
+      return;
     }
+
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(prefersDark ? "night" : "light");
   };
 
   const setButtonsDisabled = (disabled) => {

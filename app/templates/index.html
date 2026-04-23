@@ -4,6 +4,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>switch-ip</title>
+    <script>
+      (() => {
+        try {
+          const themeStorageKey = "switch-ip-theme";
+          const savedTheme = window.localStorage.getItem(themeStorageKey);
+          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.dataset.theme =
+            savedTheme === "night" || savedTheme === "light"
+              ? savedTheme
+              : prefersDark
+                ? "night"
+                : "light";
+        } catch (_) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
     <link rel="icon" type="image/x-icon" href="{{ static_asset_url('favicon.ico') }}">
     <link rel="shortcut icon" href="{{ static_asset_url('favicon.ico') }}">
     <link rel="stylesheet" href="{{ static_asset_url('style.css') }}">
@@ -13,7 +30,9 @@
     <div class="page-shell">
       <header class="topbar">
         <div class="brand">
-          <div class="brand-mark">SB</div>
+          <div class="brand-mark" aria-hidden="true">
+            <img src="{{ static_asset_url('favicon.ico') }}" alt="">
+          </div>
           <div class="brand-copy">
             <h1>Sing-box Egress Switch</h1>
           </div>
