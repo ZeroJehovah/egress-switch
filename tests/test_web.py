@@ -53,6 +53,8 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert response.status_code == 200
     body = response.get_data(as_text=True)
     assert "Sing-box Egress Switch" in body
+    assert 'rel="icon"' in body
+    assert "favicon.svg" in body
     assert "服务运行中" in body
     assert "出口 IP 切换面板" in body
     assert "当前状态" in body
