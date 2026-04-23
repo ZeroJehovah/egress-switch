@@ -54,7 +54,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     body = response.get_data(as_text=True)
     assert "Sing-box Egress Switch" in body
     assert 'rel="icon"' in body
-    assert 'href="/static/favicon.svg?v=' in body
+    assert 'href="/static/favicon.ico?v=' in body
     assert 'href="/static/style.css?v=' in body
     assert 'src="/static/app.js?v=' in body
     assert "服务运行中" in body
