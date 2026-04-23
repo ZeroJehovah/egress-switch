@@ -42,6 +42,14 @@
         </div>
         <div class="meta">
           <p>配置文件：{{ state.config_path }}</p>
+          <form method="post" action="{{ url_for('switch_next_ip') }}" class="next-ip-form">
+            <button type="submit" class="next-ip-button" {% if not next_ip %}disabled{% endif %}>
+              切换到下一个 IP
+            </button>
+          </form>
+          {% if next_ip %}
+            <p>下一个：{{ next_ip }}</p>
+          {% endif %}
         </div>
       </section>
 

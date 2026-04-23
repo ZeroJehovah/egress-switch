@@ -2,7 +2,7 @@ from pathlib import Path
 
 from app.config import Settings
 from app.services.dashboard_service import DashboardState
-from app.web import create_app
+from app.web import create_app, get_next_candidate_ip
 
 
 class FakeDashboardService:
@@ -52,6 +52,8 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "出口 IP 切换面板" in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
+    assert "切换到下一个 IP" in body
+    assert "下一个：10.0.0.11" in body
     assert "切换脚本" not in body
     assert "直接切换到指定地址" not in body
     assert "例如 145 或 10.0.0.145" not in body
@@ -79,3 +81,23 @@ def test_switch_route_rejects_non_candidate_target(tmp_path: Path):
     assert response.status_code == 200
     assert fake_switch_service.last_target is None
     assert "目标 IP 不在当前候选列表中" in response.get_data(as_text=True)
+
+
+def test_switch_next_route_rotates_to_next_candidate(tmp_path: Path):
+    fake_switch_service = FakeSwitchService()
+    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    client = app.test_client()
+
+    response = client.post("/switch/next", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert fake_switch_service.last_target == "10.0.0.11"
+    assert "已轮换到下一个 IP: 10.0.0.11" in response.get_data(as_text=True)
+
+
+def test_get_next_candidate_ip_wraps_to_first():
+    assert get_next_candidate_ip("10.0.0.11", ["10.0.0.10", "10.0.0.11"]) == "10.0.0.10"
+
+
+def test_get_next_candidate_ip_uses_first_when_current_missing():
+    assert get_next_candidate_ip(None, ["10.0.0.10", "10.0.0.11"]) == "10.0.0.10"
