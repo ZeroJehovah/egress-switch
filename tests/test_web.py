@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from app.config import Settings
@@ -41,6 +42,43 @@ def build_settings(tmp_path: Path) -> Settings:
         helper_path=tmp_path / "helper.sh",
         command_timeout=5,
         debug=False,
+        public_ip_cache_path=tmp_path / "public-ip-cache.json",
+    )
+
+
+def write_singbox_config(config_path: Path, bind_ip: str = "10.0.0.10") -> None:
+    config_path.write_text(
+        json.dumps(
+            {
+                "outbounds": [
+                    {
+                        "tag": "direct",
+                        "inet4_bind_address": bind_ip,
+                    }
+                ]
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def write_public_ip_cache(settings: Settings, bind_ip: str, public_ipv4: str) -> None:
+    settings.public_ip_cache_path.write_text(
+        json.dumps(
+            {
+                "bind_ip": bind_ip,
+                "public_ipv4": public_ipv4,
+                "updated_at": "2026-04-23T10:00:00+00:00",
+                "error": None,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
     )
 
 
@@ -161,6 +199,56 @@ def test_quick_switch_form_posts_rendered_next_ip(tmp_path: Path):
     assert response.status_code == 200
     assert fake_switch_service.last_target == "10.0.0.11"
     assert "已切换到 10.0.0.11" in response.get_data(as_text=True)
+
+
+def test_web_access_whitelist_allows_loopback_without_public_ip_cache(tmp_path: Path):
+    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=FakeSwitchService())
+    client = app.test_client()
+
+    response = client.get("/", environ_overrides={"REMOTE_ADDR": "127.0.0.1"})
+
+    assert response.status_code == 200
+
+
+def test_web_access_whitelist_allows_current_public_ipv4_for_page_static_and_api(tmp_path: Path):
+    settings = build_settings(tmp_path)
+    write_singbox_config(settings.singbox_config_path, bind_ip="10.0.0.10")
+    write_public_ip_cache(settings, bind_ip="10.0.0.10", public_ipv4="203.0.113.10")
+    fake_switch_service = FakeSwitchService()
+    app = create_app(settings, dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    client = app.test_client()
+    remote = {"REMOTE_ADDR": "203.0.113.10"}
+
+    page_response = client.get("/", environ_overrides=remote)
+    static_response = client.get("/static/app.js?v=1", environ_overrides=remote)
+    api_response = client.post("/api/switch", data={"target_ip": "10.0.0.11"}, environ_overrides=remote)
+
+    assert page_response.status_code == 200
+    assert static_response.status_code == 200
+    assert api_response.status_code == 200
+    assert fake_switch_service.last_target == "10.0.0.11"
+
+
+def test_web_access_whitelist_rejects_non_whitelisted_ip(tmp_path: Path):
+    settings = build_settings(tmp_path)
+    write_singbox_config(settings.singbox_config_path, bind_ip="10.0.0.10")
+    write_public_ip_cache(settings, bind_ip="10.0.0.10", public_ipv4="203.0.113.10")
+    app = create_app(settings, dashboard_service=FakeDashboardService(), switch_service=FakeSwitchService())
+    client = app.test_client()
+    remote = {"REMOTE_ADDR": "203.0.113.11"}
+
+    page_response = client.get("/", environ_overrides=remote)
+    static_response = client.get("/static/app.js?v=1", environ_overrides=remote)
+    api_response = client.post("/api/switch", data={"target_ip": "10.0.0.11"}, environ_overrides=remote)
+
+    assert page_response.status_code == 403
+    assert "访问被拒绝" in page_response.get_data(as_text=True)
+    assert static_response.status_code == 403
+    assert api_response.status_code == 403
+    assert api_response.get_json() == {
+        "status": "error",
+        "message": "访问被拒绝：当前来源 IP 不在白名单中",
+    }
 
 
 def test_get_next_candidate_ip_wraps_to_first():

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import ipaddress
 from pathlib import Path
 
 from flask import Flask, current_app, flash, redirect, render_template, request, url_for
 
 from app.config import Settings
-from app.services import DashboardService, SwitchExecutionError, SwitchService
+from app.services import DashboardService, PublicIPv4Service, SwitchExecutionError, SwitchService
+from app.services.native_switcher import read_direct_bind_address
 
 
 def get_next_candidate_ip(current_ip: str | None, candidate_ips: list[str]) -> str | None:
@@ -62,6 +64,77 @@ def _build_static_asset_url(filename: str) -> str:
     return url_for("static", filename=filename, v=asset_path.stat().st_mtime_ns)
 
 
+def _normalize_client_ip(raw_value: str | None) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+    if not raw_value:
+        return None
+
+    try:
+        parsed = ipaddress.ip_address(raw_value)
+    except ValueError:
+        return None
+
+    if isinstance(parsed, ipaddress.IPv6Address) and parsed.ipv4_mapped is not None:
+        return parsed.ipv4_mapped
+
+    return parsed
+
+
+def _read_allowed_public_ipv4() -> str | None:
+    settings: Settings = current_app.extensions["settings"]
+    public_ip_service: PublicIPv4Service = current_app.extensions["public_ip_service"]
+
+    try:
+        current_bind_ip = read_direct_bind_address(settings.singbox_config_path)
+    except Exception as exc:
+        current_app.logger.warning("读取当前绑定 IP 失败，访问白名单退回为仅本机可用: %s", exc)
+        return None
+
+    if current_bind_ip is None:
+        return None
+
+    try:
+        cache_entry = public_ip_service.read_cache_for_bind_ip(current_bind_ip)
+    except Exception as exc:
+        current_app.logger.warning("读取公网 IPv4 缓存失败，尝试实时刷新: %s", exc)
+        cache_entry = None
+
+    if cache_entry is None or cache_entry.public_ipv4 is None:
+        try:
+            cache_entry = public_ip_service.refresh_cache(current_bind_ip)
+        except Exception as exc:
+            current_app.logger.warning("刷新公网 IPv4 失败，访问白名单退回为仅本机可用: %s", exc)
+            return None
+
+    return cache_entry.public_ipv4
+
+
+def _is_request_source_allowed(remote_addr: str | None) -> bool:
+    client_ip = _normalize_client_ip(remote_addr)
+    if client_ip is None:
+        return False
+
+    if client_ip.is_loopback:
+        return True
+
+    allowed_public_ipv4 = _read_allowed_public_ipv4()
+    if allowed_public_ipv4 is None:
+        return False
+
+    allowed_ip = _normalize_client_ip(allowed_public_ipv4)
+    return allowed_ip is not None and client_ip == allowed_ip
+
+
+def _build_forbidden_response() -> tuple[dict[str, str], int] | tuple[str, int, dict[str, str]]:
+    message = "访问被拒绝：当前来源 IP 不在白名单中"
+    if request.path.startswith("/api/"):
+        return {
+            "status": "error",
+            "message": message,
+        }, 403
+
+    return message, 403, {"Content-Type": "text/plain; charset=utf-8"}
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -72,10 +145,20 @@ def create_app(
 
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["SECRET_KEY"] = settings.secret_key
+    resolved_dashboard_service = dashboard_service or DashboardService(settings)
     app.extensions["settings"] = settings
-    app.extensions["dashboard_service"] = dashboard_service or DashboardService(settings)
+    app.extensions["dashboard_service"] = resolved_dashboard_service
     app.extensions["switch_service"] = switch_service or SwitchService(settings)
+    app.extensions["public_ip_service"] = getattr(resolved_dashboard_service, "public_ip_service", PublicIPv4Service(settings))
     app.add_template_global(_build_static_asset_url, name="static_asset_url")
+
+    @app.before_request
+    def enforce_web_access_ip_whitelist():
+        if _is_request_source_allowed(request.remote_addr):
+            return None
+
+        current_app.logger.warning("拒绝来自 %s 的访问请求: %s", request.remote_addr, request.path)
+        return _build_forbidden_response()
 
     @app.get("/")
     def index():
