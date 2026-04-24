@@ -479,6 +479,29 @@ svg {
   margin: 0 0 22px;
 }
 
+.section-intro {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel-soft);
+}
+
+.section-kicker {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+.section-copy {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .primary-action-button {
   width: 100%;
   min-height: 46px;
@@ -503,17 +526,12 @@ svg {
   box-shadow: none;
 }
 
-.panel-divider {
-  margin: 22px 0 24px;
-  border-top: 1px solid var(--border);
-}
-
 .list-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .search-box {
@@ -568,13 +586,14 @@ svg {
 
 .ip-table th,
 .ip-table td {
-  padding: 14px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   text-align: left;
+  vertical-align: middle;
 }
 
 .ip-table th {
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   color: var(--muted);
   background: var(--panel-soft);
   font-weight: 700;
@@ -589,7 +608,7 @@ svg {
 }
 
 .ip-cell {
-  font-size: 1rem;
+  font-size: 0.96rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -614,14 +633,14 @@ svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 56px;
-  min-height: 34px;
-  padding: 0 14px;
-  border-radius: 14px;
+  min-width: 50px;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 12px;
   border: 1px solid var(--vip-border);
   background: var(--vip-bg);
   color: var(--vip-text);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   box-shadow:
@@ -636,11 +655,11 @@ svg {
 .last-used-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   max-width: 100%;
-  padding: 10px 12px 10px 14px;
-  border-radius: 14px;
+  padding: 7px 10px 7px 12px;
+  border-radius: 12px;
   border: 1px solid var(--usage-none-border);
   background: var(--usage-none-surface);
   color: var(--usage-none);
@@ -651,19 +670,27 @@ svg {
   content: "";
   flex: 0 0 4px;
   align-self: stretch;
-  min-height: 34px;
+  min-height: 24px;
   border-radius: 999px;
   background: currentColor;
 }
 
 .last-used-time {
   color: inherit;
+  font-size: 0.88rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .status-chip-recency {
   border: 1px solid transparent;
+}
+
+.ip-table .status-chip {
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: 0.82rem;
 }
 
 .last-used-wrap.usage-recency-hot,
@@ -751,12 +778,13 @@ svg {
 }
 
 .table-action-button {
-  min-height: 36px;
-  padding: 0 16px;
-  border-radius: 10px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
   border: 1px solid var(--table-button-border);
   background: var(--table-button-bg);
   color: var(--brand);
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -838,7 +866,7 @@ svg {
   }
 
   .ip-table tr {
-    padding: 16px;
+    padding: 14px;
     border-bottom: 1px solid var(--border);
   }
 
@@ -848,7 +876,7 @@ svg {
   }
 
   .ip-table td + td {
-    margin-top: 12px;
+    margin-top: 10px;
   }
 
   .action-cell {

@@ -128,6 +128,11 @@
                 <h2>快速操作</h2>
               </div>
 
+              <div class="section-intro">
+                <p class="section-kicker">出口 IP 切换面板</p>
+                <p class="section-copy">当前页面展示 sing-box `direct` 出站绑定 IP，以及 {{ state.interface }} 网卡上可切换的地址列表。</p>
+              </div>
+
               <form method="post" action="{{ url_for('switch_ip') }}" class="primary-action-form" data-ajax-switch-next-form>
                 <input type="hidden" name="target_ip" value="{{ next_ip or '' }}">
                 <button type="submit" class="primary-action-button" {% if not next_ip %}disabled{% endif %}>
@@ -148,22 +153,6 @@
           </aside>
 
           <section class="card main-card">
-            <div class="panel-head">
-              <div class="panel-title">
-                <div class="card-icon large">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3M8 12h8M12 8v8" />
-                  </svg>
-                </div>
-                <div>
-                  <h2>出口 IP 切换面板</h2>
-                  <p>当前页面展示 sing-box `direct` 出站绑定 IP，以及 {{ state.interface }} 网卡上可切换的地址列表。</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="panel-divider"></div>
-
             <div class="list-toolbar">
               <div class="list-title">
                 <div class="card-icon">
