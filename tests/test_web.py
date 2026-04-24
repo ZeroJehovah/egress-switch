@@ -115,10 +115,11 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     body = response.get_data(as_text=True)
     assert "<title>Sing-box Egress Switch</title>" in body
     assert "Sing-box Egress Switch" in body
-    assert 'href="/static/favicon.svg?v=' in body
+    assert '/static/favicon.svg?v=' not in body
     assert 'rel="icon"' in body
     assert 'href="/static/favicon.ico?v=' in body
-    assert '<img src="/static/favicon.svg?v=' in body
+    assert '<img src="/static/brand-logo.png?v=' in body
+    assert '/static/brand-logo.svg?v=' not in body
     assert 'href="/static/style.css?v=' in body
     assert 'src="/static/app.js?v=' in body
     assert 'icons/status-shield.svg?v=' in body
