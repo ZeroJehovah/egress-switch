@@ -218,6 +218,7 @@
                   <tbody>
                     {% for item in state.candidate_items %}
                       <tr data-ip-row data-ip-value="{{ item.ip }}">
+                        {% set last_used = describe_last_used(item.last_used_at) %}
                         <td class="ip-cell">
                           <div class="ip-cell-wrap">
                             <span>{{ item.ip }}</span>
@@ -227,7 +228,12 @@
                           </div>
                         </td>
                         <td class="last-used-cell">
-                          {{ format_display_datetime(item.last_used_at) or "从未切换过" }}
+                          <div class="last-used-wrap {{ last_used.tone_class }}">
+                            <span class="last-used-time">{{ last_used.text }}</span>
+                            {% if last_used.label %}
+                              <span class="usage-recency-badge {{ last_used.tone_class }}">{{ last_used.label }}</span>
+                            {% endif %}
+                          </div>
                         </td>
                         <td>
                           <div class="status-chip-group">

@@ -17,6 +17,15 @@
   --danger: #d95757;
   --danger-soft: #fff1f1;
   --info-soft: #eef5ff;
+  --usage-hot: #c86f1f;
+  --usage-hot-soft: #fff0e0;
+  --usage-warm: #b38a2f;
+  --usage-warm-soft: #fff6dd;
+  --usage-mild: #789a3c;
+  --usage-mild-soft: #f2f8e3;
+  --usage-cool: #2f8f58;
+  --usage-cool-soft: #e8f7ee;
+  --usage-none-soft: #eef3f8;
   --shadow: 0 18px 38px rgba(21, 51, 98, 0.08);
   --shadow-soft: 0 10px 22px rgba(29, 68, 129, 0.06);
   --page-glow: rgba(47, 102, 243, 0.08);
@@ -54,6 +63,15 @@
   --danger: #ff9b9b;
   --danger-soft: rgba(255, 155, 155, 0.16);
   --info-soft: rgba(77, 140, 255, 0.12);
+  --usage-hot: #ffbf78;
+  --usage-hot-soft: rgba(255, 191, 120, 0.16);
+  --usage-warm: #d6ba70;
+  --usage-warm-soft: rgba(214, 186, 112, 0.15);
+  --usage-mild: #a8c86d;
+  --usage-mild-soft: rgba(168, 200, 109, 0.14);
+  --usage-cool: #7cda98;
+  --usage-cool-soft: rgba(124, 218, 152, 0.16);
+  --usage-none-soft: rgba(166, 177, 197, 0.12);
   --shadow: 0 24px 48px rgba(0, 0, 0, 0.32);
   --shadow-soft: 0 14px 28px rgba(0, 0, 0, 0.24);
   --page-glow: rgba(77, 140, 255, 0.16);
@@ -554,7 +572,74 @@ svg {
 
 .last-used-cell {
   color: var(--muted);
+}
+
+.last-used-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.last-used-time {
+  font-weight: 700;
   white-space: nowrap;
+}
+
+.usage-recency-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.last-used-wrap.usage-recency-hot .last-used-time,
+.usage-recency-badge.usage-recency-hot {
+  color: var(--usage-hot);
+}
+
+.usage-recency-badge.usage-recency-hot {
+  background: var(--usage-hot-soft);
+}
+
+.last-used-wrap.usage-recency-warm .last-used-time,
+.usage-recency-badge.usage-recency-warm {
+  color: var(--usage-warm);
+}
+
+.usage-recency-badge.usage-recency-warm {
+  background: var(--usage-warm-soft);
+}
+
+.last-used-wrap.usage-recency-mild .last-used-time,
+.usage-recency-badge.usage-recency-mild {
+  color: var(--usage-mild);
+}
+
+.usage-recency-badge.usage-recency-mild {
+  background: var(--usage-mild-soft);
+}
+
+.last-used-wrap.usage-recency-cool .last-used-time,
+.usage-recency-badge.usage-recency-cool {
+  color: var(--usage-cool);
+}
+
+.usage-recency-badge.usage-recency-cool {
+  background: var(--usage-cool-soft);
+}
+
+.last-used-wrap.usage-recency-none .last-used-time,
+.usage-recency-badge.usage-recency-none {
+  color: var(--muted);
+}
+
+.usage-recency-badge.usage-recency-none {
+  background: var(--usage-none-soft);
 }
 
 .action-column,

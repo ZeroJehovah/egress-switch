@@ -1,9 +1,18 @@
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
 from app.config import Settings
 from app.services.dashboard_service import CandidateIPState, DashboardState
-from app.web import SanitizedWSGIRequestHandler, _sanitize_request_log_text, create_app, get_next_candidate_ip, main
+from app.web import (
+    LastUsedDisplayState,
+    SanitizedWSGIRequestHandler,
+    _describe_last_used,
+    _sanitize_request_log_text,
+    create_app,
+    get_next_candidate_ip,
+    main,
+)
 
 
 class FakeDashboardService:
@@ -124,6 +133,8 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "2026-04-23 18:00:00" in body
     assert "最近使用时间" in body
     assert "2026-04-23 18:00:00" in body
+    assert "last-used-wrap" in body
+    assert "usage-recency-badge" in body
     assert "主要 IP" in body
     assert "固定标识" in body
     assert "切换到下一个 IP" in body
@@ -303,6 +314,39 @@ def test_get_next_candidate_ip_prefers_never_used_candidates():
         ],
         chooser=lambda items: sorted(items)[-1],
     ) == "10.0.0.12"
+
+
+def test_describe_last_used_uses_four_recency_tiers():
+    now = datetime(2026, 4, 24, 12, 0, tzinfo=timezone.utc)
+
+    assert _describe_last_used("2026-04-24T11:00:00+00:00", now=now) == LastUsedDisplayState(
+        text="2026-04-24 19:00:00",
+        tone_class="usage-recency-hot",
+        label="1天内使用过",
+    )
+    assert _describe_last_used("2026-04-22T11:00:00+00:00", now=now) == LastUsedDisplayState(
+        text="2026-04-22 19:00:00",
+        tone_class="usage-recency-warm",
+        label="3天内使用过",
+    )
+    assert _describe_last_used("2026-04-18T12:30:00+00:00", now=now) == LastUsedDisplayState(
+        text="2026-04-18 20:30:00",
+        tone_class="usage-recency-mild",
+        label="7天内使用过",
+    )
+    assert _describe_last_used("2026-04-16T10:00:00+00:00", now=now) == LastUsedDisplayState(
+        text="2026-04-16 18:00:00",
+        tone_class="usage-recency-cool",
+        label="7天内未使用过",
+    )
+
+
+def test_describe_last_used_marks_never_used_as_neutral():
+    assert _describe_last_used(None) == LastUsedDisplayState(
+        text="从未切换过",
+        tone_class="usage-recency-none",
+        label=None,
+    )
 
 
 def test_switch_next_api_returns_json(tmp_path: Path):

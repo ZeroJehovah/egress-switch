@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ipaddress
 import random
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -15,6 +16,14 @@ from app.services.native_switcher import read_direct_bind_address
 
 DISPLAY_TIMEZONE = timezone(timedelta(hours=8))
 MAX_REQUEST_LOG_TEXT_LENGTH = 240
+LAST_USED_TIME_NEVER_TEXT = "从未切换过"
+
+
+@dataclass(frozen=True, slots=True)
+class LastUsedDisplayState:
+    text: str
+    tone_class: str
+    label: str | None = None
 
 
 def _sanitize_request_log_text(raw_value: str, *, max_length: int = MAX_REQUEST_LOG_TEXT_LENGTH) -> str:
@@ -65,6 +74,55 @@ def _parse_candidate_last_used_at(raw_value: str) -> datetime:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed
+
+
+def _describe_last_used(raw_value: str | None, *, now: datetime | None = None) -> LastUsedDisplayState:
+    if not raw_value:
+        return LastUsedDisplayState(text=LAST_USED_TIME_NEVER_TEXT, tone_class="usage-recency-none")
+
+    formatted = _format_display_datetime(raw_value) or raw_value
+
+    try:
+        parsed = _parse_candidate_last_used_at(raw_value)
+    except ValueError:
+        return LastUsedDisplayState(text=formatted, tone_class="usage-recency-none")
+
+    reference_time = now or datetime.now(timezone.utc)
+    if reference_time.tzinfo is None:
+        reference_time = reference_time.replace(tzinfo=timezone.utc)
+    else:
+        reference_time = reference_time.astimezone(timezone.utc)
+
+    age = reference_time - parsed.astimezone(timezone.utc)
+    if age < timedelta(0):
+        age = timedelta(0)
+
+    if age <= timedelta(days=1):
+        return LastUsedDisplayState(
+            text=formatted,
+            tone_class="usage-recency-hot",
+            label="1天内使用过",
+        )
+
+    if age <= timedelta(days=3):
+        return LastUsedDisplayState(
+            text=formatted,
+            tone_class="usage-recency-warm",
+            label="3天内使用过",
+        )
+
+    if age <= timedelta(days=7):
+        return LastUsedDisplayState(
+            text=formatted,
+            tone_class="usage-recency-mild",
+            label="7天内使用过",
+        )
+
+    return LastUsedDisplayState(
+        text=formatted,
+        tone_class="usage-recency-cool",
+        label="7天内未使用过",
+    )
 
 
 def get_next_candidate_ip(
@@ -240,6 +298,7 @@ def create_app(
     app.extensions["switch_service"] = switch_service or SwitchService(settings)
     app.extensions["public_ip_service"] = getattr(resolved_dashboard_service, "public_ip_service", PublicIPv4Service(settings))
     app.add_template_global(_build_static_asset_url, name="static_asset_url")
+    app.add_template_global(_describe_last_used, name="describe_last_used")
     app.add_template_global(_format_display_datetime, name="format_display_datetime")
 
     @app.before_request
