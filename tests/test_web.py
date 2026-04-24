@@ -3,7 +3,7 @@ from pathlib import Path
 
 from app.config import Settings
 from app.services.dashboard_service import CandidateIPState, DashboardState
-from app.web import create_app, get_next_candidate_ip
+from app.web import SanitizedWSGIRequestHandler, _sanitize_request_log_text, create_app, get_next_candidate_ip, main
 
 
 class FakeDashboardService:
@@ -346,3 +346,39 @@ def test_switch_next_api_returns_error_when_no_candidates(tmp_path: Path):
         "status": "error",
         "message": "当前没有可切换的候选 IP",
     }
+
+
+def test_sanitize_request_log_text_escapes_binary_payload():
+    assert _sanitize_request_log_text("\x16\x03\x01\x00îÀ") == "\\x16\\x03\\x01\\x00\\xEE\\xC0"
+
+
+def test_sanitized_request_handler_rewrites_bad_request_log_message():
+    handler = SanitizedWSGIRequestHandler.__new__(SanitizedWSGIRequestHandler)
+    captured: list[str] = []
+    handler.log = lambda _level, message, *args: captured.append(message % args)
+
+    handler.log_error("code %d, message %s", 400, "Bad request version ('À\x14À')")
+
+    assert captured == ["code 400, message Bad request version ('\\xC0\\x14\\xC0')"]
+
+
+def test_main_uses_sanitized_request_handler(monkeypatch, tmp_path: Path):
+    captured_kwargs: dict[str, object] = {}
+    fake_settings = build_settings(tmp_path)
+
+    class FakeApp:
+        def __init__(self):
+            self.extensions = {"settings": fake_settings}
+
+        def run(self, **kwargs):
+            captured_kwargs.update(kwargs)
+
+    monkeypatch.setattr("app.web.create_app", lambda: FakeApp())
+
+    main()
+
+    assert captured_kwargs["host"] == fake_settings.host
+    assert captured_kwargs["port"] == fake_settings.port
+    assert captured_kwargs["debug"] is fake_settings.debug
+    assert captured_kwargs["load_dotenv"] is False
+    assert captured_kwargs["request_handler"] is SanitizedWSGIRequestHandler

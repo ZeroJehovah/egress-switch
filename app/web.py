@@ -6,12 +6,58 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from flask import Flask, current_app, flash, redirect, render_template, request, url_for
+from werkzeug.serving import WSGIRequestHandler
+from werkzeug.urls import uri_to_iri
 
 from app.config import Settings
 from app.services import CandidateIPState, DashboardService, PublicIPv4Service, SwitchExecutionError, SwitchService
 from app.services.native_switcher import read_direct_bind_address
 
 DISPLAY_TIMEZONE = timezone(timedelta(hours=8))
+MAX_REQUEST_LOG_TEXT_LENGTH = 240
+
+
+def _sanitize_request_log_text(raw_value: str, *, max_length: int = MAX_REQUEST_LOG_TEXT_LENGTH) -> str:
+    sanitized_parts: list[str] = []
+    for char in raw_value:
+        codepoint = ord(char)
+        if 32 <= codepoint <= 126:
+            sanitized_parts.append(char)
+        elif char == "\t":
+            sanitized_parts.append("\\t")
+        elif char == "\r":
+            sanitized_parts.append("\\r")
+        elif char == "\n":
+            sanitized_parts.append("\\n")
+        elif codepoint <= 0xFF:
+            sanitized_parts.append(f"\\x{codepoint:02X}")
+        elif codepoint <= 0xFFFF:
+            sanitized_parts.append(f"\\u{codepoint:04X}")
+        else:
+            sanitized_parts.append(f"\\U{codepoint:08X}")
+
+    sanitized = "".join(sanitized_parts)
+    if len(sanitized) <= max_length:
+        return sanitized
+
+    remaining = len(sanitized) - max_length
+    return f"{sanitized[:max_length]}...(truncated {remaining} chars)"
+
+
+class SanitizedWSGIRequestHandler(WSGIRequestHandler):
+    def log_error(self, format: str, *args: object) -> None:
+        rendered_message = format % args if args else format
+        self.log("error", "%s", _sanitize_request_log_text(rendered_message))
+
+    def log_request(self, code: int | str = "-", size: int | str = "-") -> None:
+        try:
+            path = uri_to_iri(self.path)
+            message = f"{self.command} {path} {self.request_version}"
+        except AttributeError:
+            message = self.requestline
+
+        sanitized_message = _sanitize_request_log_text(message.translate(self._control_char_table))
+        self.log("info", '"%s" %s %s', sanitized_message, str(code), size)
 
 
 def _parse_candidate_last_used_at(raw_value: str) -> datetime:
@@ -284,7 +330,13 @@ def create_app(
 def main() -> None:
     app = create_app()
     settings: Settings = app.extensions["settings"]
-    app.run(host=settings.host, port=settings.port, debug=settings.debug, load_dotenv=False)
+    app.run(
+        host=settings.host,
+        port=settings.port,
+        debug=settings.debug,
+        load_dotenv=False,
+        request_handler=SanitizedWSGIRequestHandler,
+    )
 
 
 if __name__ == "__main__":
