@@ -101,6 +101,9 @@
                   {% if state.current_ip %}
                     <span class="status-chip status-chip-green">使用中</span>
                   {% endif %}
+                  {% if state.current_ip and state.current_ip == state.primary_ip %}
+                    <span class="status-chip status-chip-amber">主要 IP</span>
+                  {% endif %}
                 </div>
               </div>
 
@@ -115,6 +118,16 @@
               <div class="stat-group">
                 <p class="stat-label">更新时间</p>
                 <p class="stat-text">{{ format_display_datetime(state.public_ipv4_updated_at) or "暂无缓存" }}</p>
+              </div>
+
+              <div class="stat-group">
+                <p class="stat-label">主要 IP</p>
+                <div class="stat-line">
+                  <p class="stat-text">{{ state.primary_ip or "未配置" }}</p>
+                  {% if state.primary_ip %}
+                    <span class="status-chip status-chip-amber">固定标识</span>
+                  {% endif %}
+                </div>
               </div>
 
               <div class="stat-group">
@@ -141,7 +154,7 @@
               </form>
 
               <div class="quick-stat">
-                <p class="stat-label">下一个 IP</p>
+                <p class="stat-label">下一个 IP（最长未使用）</p>
                 <p class="quick-value">{{ next_ip or "暂无" }}</p>
               </div>
 
@@ -197,26 +210,39 @@
                   <thead>
                     <tr>
                       <th>IP 地址</th>
+                      <th>最近使用时间</th>
                       <th>状态</th>
                       <th class="action-column">操作</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {% for ip in state.candidate_ips %}
-                      <tr data-ip-row data-ip-value="{{ ip }}">
-                        <td class="ip-cell">{{ ip }}</td>
+                    {% for item in state.candidate_items %}
+                      <tr data-ip-row data-ip-value="{{ item.ip }}">
+                        <td class="ip-cell">
+                          <div class="ip-cell-wrap">
+                            <span>{{ item.ip }}</span>
+                            {% if item.is_primary %}
+                              <span class="status-chip status-chip-amber">主要 IP</span>
+                            {% endif %}
+                          </div>
+                        </td>
+                        <td class="last-used-cell">
+                          {{ format_display_datetime(item.last_used_at) or "从未切换过" }}
+                        </td>
                         <td>
-                          {% if ip == state.current_ip %}
-                            <span class="status-chip status-chip-green">当前使用中</span>
-                          {% else %}
-                            <span class="status-chip status-chip-blue">可切换</span>
-                          {% endif %}
+                          <div class="status-chip-group">
+                            {% if item.ip == state.current_ip %}
+                              <span class="status-chip status-chip-green">当前使用中</span>
+                            {% else %}
+                              <span class="status-chip status-chip-blue">可切换</span>
+                            {% endif %}
+                          </div>
                         </td>
                         <td class="action-cell">
                           <form method="post" action="{{ url_for('switch_ip') }}" class="inline-action-form" data-ajax-switch-form>
-                            <input type="hidden" name="target_ip" value="{{ ip }}">
-                            <button type="submit" class="table-action-button" {% if ip == state.current_ip %}disabled{% endif %}>
-                              {% if ip == state.current_ip %}
+                            <input type="hidden" name="target_ip" value="{{ item.ip }}">
+                            <button type="submit" class="table-action-button" {% if item.ip == state.current_ip %}disabled{% endif %}>
+                              {% if item.ip == state.current_ip %}
                                 当前地址
                               {% else %}
                                 切换到此地址

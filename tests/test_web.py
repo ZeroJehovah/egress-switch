@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from app.config import Settings
-from app.services.dashboard_service import DashboardState
+from app.services.dashboard_service import CandidateIPState, DashboardState
 from app.web import create_app, get_next_candidate_ip
 
 
@@ -14,9 +14,22 @@ class FakeDashboardService:
             public_ipv4_updated_at="2026-04-23T10:00:00+00:00",
             public_ipv4_error=None,
             candidate_ips=["10.0.0.10", "10.0.0.11"],
+            candidate_items=[
+                CandidateIPState(
+                    ip="10.0.0.10",
+                    last_used_at="2026-04-24T10:00:00+00:00",
+                    is_primary=False,
+                ),
+                CandidateIPState(
+                    ip="10.0.0.11",
+                    last_used_at="2026-04-23T10:00:00+00:00",
+                    is_primary=True,
+                ),
+            ],
             errors=[],
             interface="enp0s6",
             config_path="/etc/sing-box/config.json",
+            primary_ip="10.0.0.11",
         )
 
 
@@ -43,6 +56,8 @@ def build_settings(tmp_path: Path) -> Settings:
         command_timeout=5,
         debug=False,
         public_ip_cache_path=tmp_path / "public-ip-cache.json",
+        primary_ip="10.0.0.11",
+        usage_history_path=tmp_path / "ip-usage-history.txt",
     )
 
 
@@ -107,8 +122,12 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "203.0.113.10" in body
     assert "更新时间" in body
     assert "2026-04-23 18:00:00" in body
+    assert "最近使用时间" in body
+    assert "2026-04-23 18:00:00" in body
+    assert "主要 IP" in body
+    assert "固定标识" in body
     assert "切换到下一个 IP" in body
-    assert "下一个 IP" in body
+    assert "下一个 IP（最长未使用）" in body
     assert "10.0.0.11" in body
     assert 'action="/switch"' in body
     assert 'action="/switch/next"' not in body
@@ -122,6 +141,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "直接切换到指定地址" not in body
     assert "例如 145 或 10.0.0.145" not in body
     assert "仅供合法用途使用" not in body
+    assert "从未切换过" not in body
 
 
 def test_switch_route_redirects_and_flashes(tmp_path: Path):
@@ -254,11 +274,35 @@ def test_web_access_whitelist_rejects_non_whitelisted_ip(tmp_path: Path):
 
 
 def test_get_next_candidate_ip_wraps_to_first():
-    assert get_next_candidate_ip("10.0.0.11", ["10.0.0.10", "10.0.0.11"]) == "10.0.0.10"
+    assert get_next_candidate_ip(
+        "10.0.0.11",
+        [
+            CandidateIPState(ip="10.0.0.10", last_used_at="2026-04-23T10:00:00+00:00", is_primary=False),
+            CandidateIPState(ip="10.0.0.11", last_used_at="2026-04-24T10:00:00+00:00", is_primary=False),
+        ],
+    ) == "10.0.0.10"
 
 
 def test_get_next_candidate_ip_uses_first_when_current_missing():
-    assert get_next_candidate_ip(None, ["10.0.0.10", "10.0.0.11"]) == "10.0.0.10"
+    assert get_next_candidate_ip(
+        None,
+        [
+            CandidateIPState(ip="10.0.0.10", last_used_at="2026-04-23T10:00:00+00:00", is_primary=False),
+            CandidateIPState(ip="10.0.0.11", last_used_at="2026-04-24T10:00:00+00:00", is_primary=False),
+        ],
+    ) == "10.0.0.10"
+
+
+def test_get_next_candidate_ip_prefers_never_used_candidates():
+    assert get_next_candidate_ip(
+        "10.0.0.10",
+        [
+            CandidateIPState(ip="10.0.0.10", last_used_at="2026-04-24T10:00:00+00:00", is_primary=False),
+            CandidateIPState(ip="10.0.0.11", last_used_at=None, is_primary=False),
+            CandidateIPState(ip="10.0.0.12", last_used_at=None, is_primary=False),
+        ],
+        chooser=lambda items: sorted(items)[-1],
+    ) == "10.0.0.12"
 
 
 def test_switch_next_api_returns_json(tmp_path: Path):
@@ -285,9 +329,11 @@ def test_switch_next_api_returns_error_when_no_candidates(tmp_path: Path):
                 public_ipv4_updated_at=None,
                 public_ipv4_error=None,
                 candidate_ips=[],
+                candidate_items=[],
                 errors=[],
                 interface="enp0s6",
                 config_path="/etc/sing-box/config.json",
+                primary_ip="10.0.0.11",
             )
 
     app = create_app(build_settings(tmp_path), dashboard_service=EmptyDashboardService(), switch_service=FakeSwitchService())

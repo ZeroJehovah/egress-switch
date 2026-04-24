@@ -1,28 +1,53 @@
 from __future__ import annotations
 
 import ipaddress
+import random
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from flask import Flask, current_app, flash, redirect, render_template, request, url_for
 
 from app.config import Settings
-from app.services import DashboardService, PublicIPv4Service, SwitchExecutionError, SwitchService
+from app.services import CandidateIPState, DashboardService, PublicIPv4Service, SwitchExecutionError, SwitchService
 from app.services.native_switcher import read_direct_bind_address
 
 DISPLAY_TIMEZONE = timezone(timedelta(hours=8))
 
 
-def get_next_candidate_ip(current_ip: str | None, candidate_ips: list[str]) -> str | None:
-    if not candidate_ips:
+def _parse_candidate_last_used_at(raw_value: str) -> datetime:
+    parsed = datetime.fromisoformat(raw_value)
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def get_next_candidate_ip(
+    current_ip: str | None,
+    candidate_items: list[CandidateIPState],
+    *,
+    chooser=random.choice,
+) -> str | None:
+    if not candidate_items:
         return None
 
-    if current_ip not in candidate_ips:
-        return candidate_ips[0]
+    eligible_items = candidate_items
+    if len(candidate_items) > 1 and current_ip is not None:
+        eligible_items = [item for item in candidate_items if item.ip != current_ip]
 
-    current_index = candidate_ips.index(current_ip)
-    next_index = (current_index + 1) % len(candidate_ips)
-    return candidate_ips[next_index]
+    if not eligible_items:
+        return None
+
+    never_used_ips = [item.ip for item in eligible_items if item.last_used_at is None]
+    if never_used_ips:
+        return chooser(never_used_ips)
+
+    return min(
+        eligible_items,
+        key=lambda item: (
+            _parse_candidate_last_used_at(item.last_used_at or ""),
+            ipaddress.IPv4Address(item.ip),
+        ),
+    ).ip
 
 
 def _switch_to_target(target_ip: str) -> tuple[bool, str, str | None]:
@@ -40,7 +65,7 @@ def _switch_to_target(target_ip: str) -> tuple[bool, str, str | None]:
 
 def _switch_to_next_candidate() -> tuple[bool, str, str | None]:
     state = current_app.extensions["dashboard_service"].build_state()
-    next_ip = get_next_candidate_ip(state.current_ip, state.candidate_ips)
+    next_ip = get_next_candidate_ip(state.current_ip, state.candidate_items)
     if next_ip is None:
         return False, "当前没有可切换的候选 IP", None
 
@@ -182,7 +207,7 @@ def create_app(
     @app.get("/")
     def index():
         state = current_app.extensions["dashboard_service"].build_state()
-        next_ip = get_next_candidate_ip(state.current_ip, state.candidate_ips)
+        next_ip = get_next_candidate_ip(state.current_ip, state.candidate_items)
         return render_template("index.html", state=state, next_ip=next_ip, settings=current_app.extensions["settings"])
 
     @app.post("/switch")

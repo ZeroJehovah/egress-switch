@@ -11,6 +11,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from app.config import Settings
+from app.services.ip_usage_service import IpUsageError, IpUsageService
 from app.services.native_switcher import NativeSwitchError, NativeSwitcher, read_direct_bind_address
 from app.services.switch_service import normalize_target_ip
 
@@ -49,12 +50,18 @@ def main() -> int:
     settings = Settings.from_env()
     target_ip = normalize_target_ip(sys.argv[1], settings.subnet_prefix)
     switcher = NativeSwitcher(settings)
+    ip_usage_service = IpUsageService(settings)
 
     try:
         outcome = switcher.switch_ip(target_ip)
     except (ValueError, NativeSwitchError) as exc:
         print(f"错误: {exc}", file=sys.stderr)
         return 1
+
+    try:
+        ip_usage_service.mark_used(outcome.target_ip)
+    except IpUsageError as exc:
+        print(f"警告: 最近使用时间记录写入失败: {exc}", file=sys.stderr)
 
     print(f"备份配置到: {outcome.backup_path}")
     print(f"写入 sing-box 出站绑定地址: {outcome.target_ip}")

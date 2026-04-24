@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +23,20 @@ def _resolve_path(raw_path: str, base_dir: Path) -> Path:
     return (base_dir / candidate).resolve()
 
 
+def _normalize_optional_ipv4(raw_value: str | None) -> str | None:
+    if raw_value is None:
+        return None
+
+    candidate = raw_value.strip()
+    if not candidate:
+        return None
+
+    try:
+        return str(ipaddress.IPv4Address(candidate))
+    except ipaddress.AddressValueError as exc:
+        raise ValueError(f"无效的 IPv4 地址配置: {candidate}") from exc
+
+
 @dataclass(slots=True)
 class Settings:
     host: str
@@ -37,6 +52,8 @@ class Settings:
     debug: bool
     public_ip_api_url: str = "https://api.ipify.org?format=json"
     public_ip_cache_path: Path = BASE_DIR / ".run/public-ip-cache.json"
+    primary_ip: str | None = None
+    usage_history_path: Path = BASE_DIR / ".run/ip-usage-history.txt"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -62,6 +79,11 @@ class Settings:
             public_ip_api_url=os.getenv("SWITCH_IP_PUBLIC_IP_API_URL", "https://api.ipify.org?format=json"),
             public_ip_cache_path=_resolve_path(
                 os.getenv("SWITCH_IP_PUBLIC_IP_CACHE_PATH", ".run/public-ip-cache.json"),
+                BASE_DIR,
+            ),
+            primary_ip=_normalize_optional_ipv4(os.getenv("SWITCH_IP_PRIMARY_IP")),
+            usage_history_path=_resolve_path(
+                os.getenv("SWITCH_IP_USAGE_HISTORY_PATH", ".run/ip-usage-history.txt"),
                 BASE_DIR,
             ),
         )

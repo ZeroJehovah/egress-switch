@@ -12,6 +12,8 @@
   --brand-soft: #ebf2ff;
   --success: #2a9d5b;
   --success-soft: #eaf8f0;
+  --warning: #b87413;
+  --warning-soft: #fff3df;
   --danger: #d95757;
   --danger-soft: #fff1f1;
   --info-soft: #eef5ff;
@@ -47,6 +49,8 @@
   --brand-soft: rgba(77, 140, 255, 0.15);
   --success: #78d391;
   --success-soft: rgba(120, 211, 145, 0.18);
+  --warning: #f2bf71;
+  --warning-soft: rgba(242, 191, 113, 0.16);
   --danger: #ff9b9b;
   --danger-soft: rgba(255, 155, 155, 0.16);
   --info-soft: rgba(77, 140, 255, 0.12);
@@ -416,6 +420,11 @@ svg {
   background: var(--brand-soft);
 }
 
+.status-chip-amber {
+  color: var(--warning);
+  background: var(--warning-soft);
+}
+
 .primary-action-form {
   margin: 0 0 22px;
 }
@@ -533,6 +542,19 @@ svg {
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+
+.ip-cell-wrap,
+.status-chip-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.last-used-cell {
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .action-column,

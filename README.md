@@ -2,14 +2,15 @@
 
 一个运行在 Oracle Cloud ARM Ubuntu 实例上的 sing-box 出站 IP 切换工具。
 
-它提供一个简单的 Web 管理页面，用来查看当前 `direct` 出站绑定 IP、候选 IP 列表，以及执行切换。切换完成后，页面会展示对应的公网 IPv4，并支持按顺序轮换到下一个 IP。
+它提供一个简单的 Web 管理页面，用来查看当前 `direct` 出站绑定 IP、候选 IP 列表、各 IP 最近使用时间，以及执行切换。切换完成后，页面会展示对应的公网 IPv4，并支持优先切换到最长未使用的 IP。
 
 ## 功能
 
 - 展示当前 sing-box `direct` 出站绑定 IP
 - 展示指定网卡上的候选 IPv4 列表
+- 展示每个候选 IP 的最近使用时间，并标记当前实例主要 IP
 - 通过页面按钮切换到指定 IP
-- 支持一键切换到下一个 IP
+- 支持一键切换到最长未使用的 IP
 - 切换后刷新并缓存当前出口公网 IPv4
 - 提供 `switch-next-ip.py` 供 `crontab` 调用
 - 对页面、静态资源和 AJAX 接口启用来源 IP 白名单
@@ -51,6 +52,8 @@ cp .env.example .env
 - `SWITCH_IP_INTERFACE`：需要读取候选 IP 的网卡名
 - `SWITCH_IP_SUBNET_PREFIX`：候选 IP 过滤前缀，例如 `10.0.0`
 - `SWITCH_IP_PORT`：Web 页面监听端口，默认 `8080`
+- `SWITCH_IP_PRIMARY_IP`：当前实例的主要 IP，会在页面中高亮标记
+- `SWITCH_IP_USAGE_HISTORY_PATH`：最近使用时间记录文件，默认 `.run/ip-usage-history.txt`
 
 4. 启动服务
 
@@ -136,7 +139,7 @@ http://<server-ip>:8080
 页面支持两种切换方式：
 
 - 点击右侧列表中的“切换到此地址”
-- 点击左侧“切换到下一个 IP”
+- 点击左侧“切换到下一个 IP”，实际会优先选择从未使用过的地址；若没有未使用地址，则选择最近使用时间最早的地址
 
 更新时间按 `UTC+8` 显示，格式为 `yyyy-MM-dd HH:mm:ss`。
 
