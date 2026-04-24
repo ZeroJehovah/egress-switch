@@ -101,9 +101,6 @@
                   {% if state.current_ip %}
                     <span class="status-chip status-chip-green">使用中</span>
                   {% endif %}
-                  {% if state.current_ip and state.current_ip == state.primary_ip %}
-                    <span class="status-chip status-chip-amber">主要 IP</span>
-                  {% endif %}
                 </div>
               </div>
 
@@ -113,21 +110,6 @@
                 {% if state.public_ipv4_error %}
                   <p class="stat-note error">{{ state.public_ipv4_error }}</p>
                 {% endif %}
-              </div>
-
-              <div class="stat-group">
-                <p class="stat-label">更新时间</p>
-                <p class="stat-text">{{ format_display_datetime(state.public_ipv4_updated_at) or "暂无缓存" }}</p>
-              </div>
-
-              <div class="stat-group">
-                <p class="stat-label">主要 IP</p>
-                <div class="stat-line">
-                  <p class="stat-text">{{ state.primary_ip or "未配置" }}</p>
-                  {% if state.primary_ip %}
-                    <span class="status-chip status-chip-amber">固定标识</span>
-                  {% endif %}
-                </div>
               </div>
 
               <div class="stat-group">
@@ -220,19 +202,16 @@
                       <tr data-ip-row data-ip-value="{{ item.ip }}">
                         {% set last_used = describe_last_used(item.last_used_at) %}
                         <td class="ip-cell">
-                          <div class="ip-cell-wrap">
-                            <span>{{ item.ip }}</span>
+                          <div class="ip-cell-wrap{% if item.is_primary %} ip-cell-wrap-primary{% endif %}">
+                            <span class="ip-cell-value">{{ item.ip }}</span>
                             {% if item.is_primary %}
-                              <span class="status-chip status-chip-amber">主要 IP</span>
+                              <span class="primary-badge" title="主要 IP">VIP</span>
                             {% endif %}
                           </div>
                         </td>
                         <td class="last-used-cell">
                           <div class="last-used-wrap {{ last_used.tone_class }}">
                             <span class="last-used-time">{{ last_used.text }}</span>
-                            {% if last_used.label %}
-                              <span class="usage-recency-badge {{ last_used.tone_class }}">{{ last_used.label }}</span>
-                            {% endif %}
                           </div>
                         </td>
                         <td>
@@ -240,7 +219,7 @@
                             {% if item.ip == state.current_ip %}
                               <span class="status-chip status-chip-green">当前使用中</span>
                             {% else %}
-                              <span class="status-chip status-chip-blue">可切换</span>
+                              <span class="status-chip status-chip-recency {{ last_used.tone_class }}">{{ last_used.label }}</span>
                             {% endif %}
                           </div>
                         </td>

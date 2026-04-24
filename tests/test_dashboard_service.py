@@ -128,7 +128,6 @@ def test_dashboard_reads_cached_public_ipv4(tmp_path: Path):
     state = service.build_state()
 
     assert state.public_ipv4 == "203.0.113.11"
-    assert state.public_ipv4_updated_at == "2026-04-23T10:00:00+00:00"
     assert state.public_ipv4_error is None
 
 

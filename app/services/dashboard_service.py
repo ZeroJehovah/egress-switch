@@ -31,7 +31,6 @@ class CandidateIPState:
 class DashboardState:
     current_ip: str | None
     public_ipv4: str | None
-    public_ipv4_updated_at: str | None
     public_ipv4_error: str | None
     candidate_ips: list[str]
     candidate_items: list[CandidateIPState]
@@ -93,7 +92,6 @@ class DashboardService:
         return DashboardState(
             current_ip=current_ip,
             public_ipv4=public_ip_entry.public_ipv4 if public_ip_entry else None,
-            public_ipv4_updated_at=public_ip_entry.updated_at if public_ip_entry else None,
             public_ipv4_error=public_ip_entry.error if public_ip_entry else None,
             candidate_ips=candidate_ips,
             candidate_items=candidate_items,

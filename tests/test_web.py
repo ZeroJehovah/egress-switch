@@ -20,7 +20,6 @@ class FakeDashboardService:
         return DashboardState(
             current_ip="10.0.0.10",
             public_ipv4="203.0.113.10",
-            public_ipv4_updated_at="2026-04-23T10:00:00+00:00",
             public_ipv4_error=None,
             candidate_ips=["10.0.0.10", "10.0.0.11"],
             candidate_items=[
@@ -129,14 +128,12 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
     assert "203.0.113.10" in body
-    assert "更新时间" in body
-    assert "2026-04-23 18:00:00" in body
     assert "最近使用时间" in body
     assert "2026-04-23 18:00:00" in body
     assert "last-used-wrap" in body
-    assert "usage-recency-badge" in body
-    assert "主要 IP" in body
-    assert "固定标识" in body
+    assert "VIP" in body
+    assert "当前使用中" in body
+    assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body
     assert "切换到下一个 IP" in body
     assert "下一个 IP（最长未使用）" in body
     assert "10.0.0.11" in body
@@ -345,7 +342,7 @@ def test_describe_last_used_marks_never_used_as_neutral():
     assert _describe_last_used(None) == LastUsedDisplayState(
         text="从未切换过",
         tone_class="usage-recency-none",
-        label=None,
+        label="从未切换过",
     )
 
 
@@ -370,7 +367,6 @@ def test_switch_next_api_returns_error_when_no_candidates(tmp_path: Path):
             return DashboardState(
                 current_ip=None,
                 public_ipv4=None,
-                public_ipv4_updated_at=None,
                 public_ipv4_error=None,
                 candidate_ips=[],
                 candidate_items=[],

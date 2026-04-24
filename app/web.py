@@ -78,14 +78,22 @@ def _parse_candidate_last_used_at(raw_value: str) -> datetime:
 
 def _describe_last_used(raw_value: str | None, *, now: datetime | None = None) -> LastUsedDisplayState:
     if not raw_value:
-        return LastUsedDisplayState(text=LAST_USED_TIME_NEVER_TEXT, tone_class="usage-recency-none")
+        return LastUsedDisplayState(
+            text=LAST_USED_TIME_NEVER_TEXT,
+            tone_class="usage-recency-none",
+            label=LAST_USED_TIME_NEVER_TEXT,
+        )
 
     formatted = _format_display_datetime(raw_value) or raw_value
 
     try:
         parsed = _parse_candidate_last_used_at(raw_value)
     except ValueError:
-        return LastUsedDisplayState(text=formatted, tone_class="usage-recency-none")
+        return LastUsedDisplayState(
+            text=formatted,
+            tone_class="usage-recency-none",
+            label=LAST_USED_TIME_NEVER_TEXT,
+        )
 
     reference_time = now or datetime.now(timezone.utc)
     if reference_time.tzinfo is None:
