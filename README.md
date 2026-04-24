@@ -54,6 +54,7 @@ cp .env.example .env
 - `SWITCH_IP_PORT`：Web 页面监听端口，默认 `8080`
 - `SWITCH_IP_PRIMARY_IP`：当前实例的主要 IP，会在页面中高亮标记
 - `SWITCH_IP_USAGE_HISTORY_PATH`：最近使用时间记录文件，默认 `.run/ip-usage-history.txt`
+- `SWITCH_IP_SYSTEMD_SERVICE_NAME`：Web 服务对应的 systemd 单元名，默认 `switch-ip`；留空可禁用脚本中的 systemd 检测
 
 4. 启动服务
 
@@ -168,6 +169,8 @@ http://<server-ip>:8080
 ```bash
 ./scripts/update.sh
 ```
+
+如果当前 Web 服务已经由 `systemd` 托管运行，`start.sh`、`stop.sh`、`restart.sh`、`update.sh` 会优先调用对应的 `systemctl` 命令，避免再次手动拉起一份进程导致端口冲突。
 
 手动切换到指定 IP：
 

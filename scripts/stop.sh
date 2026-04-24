@@ -7,6 +7,7 @@ DEFAULT_HOST="0.0.0.0"
 DEFAULT_PORT="8080"
 DEFAULT_PID_FILE="${ROOT_DIR}/.run/switch-ip.pid"
 DEFAULT_LOG_FILE="${ROOT_DIR}/logs/switch-ip.log"
+DEFAULT_SYSTEMD_SERVICE_NAME="switch-ip"
 
 load_env_file() {
   if [[ ! -f "${ENV_FILE}" ]]; then
@@ -29,6 +30,7 @@ resolve_runtime_settings() {
   SWITCH_IP_PORT="${SWITCH_IP_PORT:-${DEFAULT_PORT}}"
   SWITCH_IP_PID_FILE="${SWITCH_IP_PID_FILE:-${DEFAULT_PID_FILE}}"
   SWITCH_IP_LOG_FILE="${SWITCH_IP_LOG_FILE:-${DEFAULT_LOG_FILE}}"
+  SWITCH_IP_SYSTEMD_SERVICE_NAME="${SWITCH_IP_SYSTEMD_SERVICE_NAME-${DEFAULT_SYSTEMD_SERVICE_NAME}}"
 
   if [[ "${SWITCH_IP_PID_FILE}" != /* ]]; then
     SWITCH_IP_PID_FILE="${ROOT_DIR}/${SWITCH_IP_PID_FILE}"
@@ -39,6 +41,28 @@ resolve_runtime_settings() {
   fi
 
   mkdir -p "$(dirname "${SWITCH_IP_PID_FILE}")" "$(dirname "${SWITCH_IP_LOG_FILE}")"
+}
+
+is_systemd_managed_invocation() {
+  [[ -n "${INVOCATION_ID:-}" ]]
+}
+
+has_systemd_service_name() {
+  [[ -n "${SWITCH_IP_SYSTEMD_SERVICE_NAME}" ]]
+}
+
+systemd_service_exists() {
+  has_systemd_service_name || return 1
+  command -v systemctl >/dev/null 2>&1 || return 1
+
+  local load_state
+  load_state="$(systemctl show --property=LoadState --value "${SWITCH_IP_SYSTEMD_SERVICE_NAME}" 2>/dev/null || true)"
+  [[ -n "${load_state}" && "${load_state}" != "not-found" ]]
+}
+
+systemd_service_active() {
+  systemd_service_exists || return 1
+  systemctl is-active --quiet "${SWITCH_IP_SYSTEMD_SERVICE_NAME}"
 }
 
 read_pid() {
@@ -64,6 +88,13 @@ is_running() {
 
 ensure_runtime_dirs
 resolve_runtime_settings
+
+if ! is_systemd_managed_invocation && systemd_service_active; then
+  echo "通过 systemd 停止 switch-ip 服务: ${SWITCH_IP_SYSTEMD_SERVICE_NAME}"
+  systemctl stop "${SWITCH_IP_SYSTEMD_SERVICE_NAME}"
+  echo "switch-ip 已停止"
+  exit 0
+fi
 
 if ! pid="$(read_pid "${SWITCH_IP_PID_FILE}")"; then
   echo "switch-ip 未运行"

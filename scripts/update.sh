@@ -4,8 +4,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-"${SCRIPT_DIR}/stop.sh"
-
 cd "${ROOT_DIR}"
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
@@ -16,4 +14,4 @@ fi
 echo "拉取最新代码..."
 git pull --ff-only
 
-"${SCRIPT_DIR}/start.sh"
+"${SCRIPT_DIR}/restart.sh"
