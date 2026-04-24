@@ -115,9 +115,10 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     body = response.get_data(as_text=True)
     assert "<title>Sing-box Egress Switch</title>" in body
     assert "Sing-box Egress Switch" in body
+    assert 'href="/static/favicon.svg?v=' in body
     assert 'rel="icon"' in body
     assert 'href="/static/favicon.ico?v=' in body
-    assert '<img src="/static/favicon.ico?v=' in body
+    assert '<img src="/static/favicon.svg?v=' in body
     assert 'href="/static/style.css?v=' in body
     assert 'src="/static/app.js?v=' in body
     assert "当前状态" in body
@@ -140,6 +141,10 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "ip-inline-badge" in body
     assert "主 IP" in body
     assert 'class="ip-row-primary"' in body
+    assert 'class="ip-table-col ip-table-col-ip"' in body
+    assert 'class="ip-table-col ip-table-col-last-used"' in body
+    assert 'class="ip-table-col ip-table-col-status"' in body
+    assert 'class="ip-table-col ip-table-col-action"' in body
     assert 'data-label="操作"' in body
     assert "当前使用中" in body
     assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body

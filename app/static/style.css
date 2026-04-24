@@ -210,16 +210,21 @@ svg {
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 11px;
+  padding: 4px;
+  border-radius: 15px;
+  border: 1px solid var(--border-strong);
+  background:
+    linear-gradient(180deg, var(--toolbar-control) 0%, var(--panel-strong) 100%);
   overflow: hidden;
   box-shadow: var(--shadow-soft);
 }
@@ -228,6 +233,7 @@ svg {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 
 .brand-copy h1 {
@@ -608,13 +614,32 @@ svg {
 .table-shell {
   border: 1px solid var(--border);
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   background: var(--panel-strong);
 }
 
 .ip-table {
   width: 100%;
+  min-width: 940px;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ip-table-col-ip {
+  width: 28%;
+}
+
+.ip-table-col-last-used {
+  width: 30%;
+}
+
+.ip-table-col-status {
+  width: 18%;
+}
+
+.ip-table-col-action {
+  width: 24%;
 }
 
 .ip-table th,
@@ -630,10 +655,12 @@ svg {
   color: var(--text);
   font-size: 0.84rem;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .ip-table td {
   font-size: 0.95rem;
+  line-height: 1.2;
 }
 
 .ip-table tbody tr {
@@ -677,8 +704,13 @@ svg {
   flex-wrap: wrap;
 }
 
+.ip-cell-wrap {
+  row-gap: 6px;
+}
+
 .ip-cell-value {
   color: var(--text);
+  word-break: break-word;
 }
 
 .ip-inline-badge {
@@ -709,6 +741,12 @@ svg {
   border: 1px solid var(--usage-none-border);
   background: var(--usage-none-surface);
   color: var(--usage-none-text);
+}
+
+.last-used-cell,
+.status-cell,
+.action-cell {
+  white-space: nowrap;
 }
 
 .last-used-wrap::before {
@@ -841,10 +879,13 @@ svg {
 
 .inline-action-form {
   margin: 0;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .table-action-button {
   min-height: 36px;
+  min-width: 118px;
   padding: 0 14px;
   border-radius: 9px;
   border: 1px solid rgba(47, 103, 246, 0.56);
@@ -947,6 +988,7 @@ svg {
   .ip-table td {
     display: block;
     width: 100%;
+    min-width: 0;
   }
 
   .ip-table thead {

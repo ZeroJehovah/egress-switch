@@ -21,6 +21,7 @@
         }
       })();
     </script>
+    <link rel="icon" type="image/svg+xml" sizes="any" href="{{ static_asset_url('favicon.svg') }}">
     <link rel="icon" type="image/x-icon" href="{{ static_asset_url('favicon.ico') }}">
     <link rel="shortcut icon" href="{{ static_asset_url('favicon.ico') }}">
     <link rel="stylesheet" href="{{ static_asset_url('style.css') }}">
@@ -31,7 +32,7 @@
       <header class="topbar">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">
-            <img src="{{ static_asset_url('favicon.ico') }}" alt="">
+            <img src="{{ static_asset_url('favicon.svg') }}" alt="" width="64" height="64">
           </div>
           <div class="brand-copy">
             <h1>Sing-box Egress Switch</h1>
@@ -200,6 +201,12 @@
             {% if state.candidate_ips %}
               <div class="table-shell">
                 <table class="ip-table">
+                  <colgroup>
+                    <col class="ip-table-col ip-table-col-ip">
+                    <col class="ip-table-col ip-table-col-last-used">
+                    <col class="ip-table-col ip-table-col-status">
+                    <col class="ip-table-col ip-table-col-action">
+                  </colgroup>
                   <thead>
                     <tr>
                       <th>IP 地址</th>
@@ -225,7 +232,7 @@
                             <span class="last-used-time">{{ last_used.text }}</span>
                           </div>
                         </td>
-                        <td data-label="状态">
+                        <td class="status-cell" data-label="状态">
                           <div class="status-chip-group">
                             {% if item.ip == state.current_ip %}
                               <span class="status-chip status-chip-green">当前使用中</span>
