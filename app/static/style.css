@@ -66,6 +66,8 @@
   --usage-none-soft: rgba(138, 150, 170, 0.14);
   --usage-none-surface: #f4f6fa;
   --usage-none-border: rgba(138, 150, 170, 0.18);
+  --theme-light-icon: #d08b1d;
+  --theme-dark-icon: #4f7dd6;
   --radius-xl: 22px;
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -140,6 +142,8 @@
   --usage-none-soft: rgba(176, 186, 201, 0.14);
   --usage-none-surface: rgba(43, 50, 61, 0.92);
   --usage-none-border: rgba(176, 186, 201, 0.18);
+  --theme-light-icon: #ffc56c;
+  --theme-dark-icon: #9fbaf5;
 }
 
 * {
@@ -188,6 +192,16 @@ svg {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
+}
+
+.mask-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  background-color: currentColor;
+  -webkit-mask: var(--icon-url) center / contain no-repeat;
+  mask: var(--icon-url) center / contain no-repeat;
 }
 
 .page-shell {
@@ -251,7 +265,6 @@ svg {
   gap: 14px;
 }
 
-.toolbar-status,
 .toolbar-button,
 .icon-button {
   min-height: 44px;
@@ -261,31 +274,6 @@ svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.toolbar-status {
-  gap: 10px;
-  padding: 0 18px;
-  border-color: var(--status-ok-border);
-  background: var(--status-ok-bg);
-  color: var(--status-ok-text);
-  font-size: 15px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.toolbar-status-warning {
-  border-color: var(--status-warn-border);
-  background: var(--status-warn-bg);
-  color: var(--status-warn-text);
-}
-
-.toolbar-status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: currentColor;
-  box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 16%, transparent);
 }
 
 .toolbar-button {
@@ -313,9 +301,27 @@ svg {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue-2) 16%, transparent);
 }
 
+.button-icon {
+  width: 1.08rem;
+  height: 1.08rem;
+}
+
+.button-icon-strong {
+  width: 1.16em;
+  height: 1.16em;
+}
+
 .theme-icon {
   width: 1rem;
   height: 1rem;
+}
+
+.theme-icon-sun {
+  color: var(--theme-light-icon);
+}
+
+.theme-icon-moon {
+  color: var(--theme-dark-icon);
 }
 
 :root[data-theme="light"] .theme-icon-moon,
@@ -420,7 +426,14 @@ svg {
   width: 28px;
   height: 28px;
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
   color: var(--blue-2);
+}
+
+.section-head-icon {
+  width: 100%;
+  height: 100%;
 }
 
 .status-stack {
@@ -513,19 +526,6 @@ svg {
   color: #d65f5f;
 }
 
-.tile-symbol,
-.next-ip-arrow {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: inherit;
-  z-index: 1;
-}
-
 .quick-card {
   min-height: 382px;
 }
@@ -592,11 +592,6 @@ svg {
 
 .next-ip-value.is-empty {
   color: var(--muted);
-}
-
-.next-ip-arrow {
-  color: var(--blue-2);
-  background: color-mix(in srgb, var(--blue) 14%, transparent);
 }
 
 .list-toolbar {
@@ -719,6 +714,11 @@ svg {
   white-space: nowrap;
 }
 
+.ip-table th:first-child,
+.ip-table td.ip-cell {
+  padding-left: 24px;
+}
+
 .ip-table td {
   height: 56px;
   padding: 0 18px;
@@ -748,15 +748,10 @@ svg {
   background: var(--current-row-bg);
 }
 
-.ip-table tbody tr.ip-row-current::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: var(--current-row-border);
+.ip-table tbody tr.ip-row-current td.ip-cell {
+  box-shadow: inset 4px 0 0 var(--current-row-border);
 }
 
-.ip-cell-wrap,
 .status-chip-group {
   display: inline-flex;
   align-items: center;
@@ -765,12 +760,18 @@ svg {
 }
 
 .ip-cell-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
   flex-wrap: nowrap;
   max-width: 100%;
 }
 
 .ip-cell-value {
   color: var(--text);
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -953,6 +954,9 @@ svg {
   border: 1px solid color-mix(in srgb, var(--blue-2) 72%, transparent);
   background: var(--table-button-bg);
   color: var(--blue-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
   font-weight: 900;
   cursor: pointer;

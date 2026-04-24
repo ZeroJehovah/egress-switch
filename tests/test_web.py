@@ -121,10 +121,17 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert '<img src="/static/favicon.svg?v=' in body
     assert 'href="/static/style.css?v=' in body
     assert 'src="/static/app.js?v=' in body
+    assert 'icons/status-shield.svg?v=' in body
+    assert 'icons/quick-actions.svg?v=' in body
+    assert 'icons/network.svg?v=' in body
+    assert 'icons/switch-next.svg?v=' in body
+    assert 'icons/refresh.svg?v=' in body
+    assert 'icons/theme-light.svg?v=' in body
+    assert 'icons/theme-dark.svg?v=' in body
     assert "当前状态" in body
     assert "快捷操作" in body
-    assert "服务运行中" in body
-    assert 'class="toolbar-status"' in body
+    assert "服务运行中" not in body
+    assert 'class="toolbar-status"' not in body
     assert "搜索 IP 地址..." in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
@@ -134,6 +141,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'class="card sidebar-card quick-card"' in body
     assert 'class="tile-value tile-value-egress"' in body
     assert 'class="tile-value tile-value-public"' in body
+    assert "tile-symbol" not in body
     assert "最近使用时间" in body
     assert "2026-04-23 18:00:00" in body
     assert "last-used-wrap" in body
@@ -158,6 +166,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "下一个 IP" in body
     assert "优先切换到最长未使用的候选 IP" in body
     assert f'next-ip-value {_describe_last_used("2026-04-23T10:00:00+00:00").tone_class}' in body
+    assert "next-ip-arrow" not in body
     assert "10.0.0.11" in body
     assert 'action="/switch"' in body
     assert 'action="/switch/next"' not in body
