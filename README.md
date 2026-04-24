@@ -8,7 +8,7 @@
 
 - 展示当前 sing-box `direct` 出站绑定 IP
 - 展示指定网卡上的候选 IPv4 列表
-- 展示每个候选 IP 的最近使用时间，并按 1 天、3 天、7 天、7 天外四档颜色区分；最近使用等级显示在“状态”列，主要 IP 以轻量 VIP 风格徽标高亮
+- 展示每个候选 IP 的最近使用时间，并按 1 天、3 天、7 天、7 天外四档颜色区分；最近使用等级显示在“状态”列，主要 IP 以整行渐变底色轻量高亮
 - 通过页面按钮切换到指定 IP
 - 支持一键切换到最长未使用的 IP
 - 切换后刷新并缓存当前出口公网 IPv4
@@ -52,7 +52,7 @@ cp .env.example .env
 - `SWITCH_IP_INTERFACE`：需要读取候选 IP 的网卡名
 - `SWITCH_IP_SUBNET_PREFIX`：候选 IP 过滤前缀，例如 `10.0.0`
 - `SWITCH_IP_PORT`：Web 页面监听端口，默认 `8080`
-- `SWITCH_IP_PRIMARY_IP`：当前实例的主要 IP，会在右侧 IP 列表中以 VIP 风格徽标轻量高亮，默认 `10.0.0.18`
+- `SWITCH_IP_PRIMARY_IP`：当前实例的主要 IP，会在右侧 IP 列表中以整行渐变底色轻量高亮，默认 `10.0.0.18`
 - `SWITCH_IP_USAGE_HISTORY_PATH`：最近使用时间记录文件，默认 `.run/ip-usage-history.txt`
 - `SWITCH_IP_SYSTEMD_SERVICE_NAME`：Web 服务对应的 systemd 单元名，默认 `switch-ip`；留空可禁用脚本中的 systemd 检测
 

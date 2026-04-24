@@ -128,8 +128,8 @@
               <div class="quick-stat">
                 <div class="stat-label-row">
                   <p class="stat-label">下一个 IP</p>
-                  <span class="info-tag" tabindex="0">
-                    Info
+                  <span class="info-tag" tabindex="0" aria-label="下一个 IP 选择规则" title="下一个 IP 选择规则">
+                    i
                     <span class="info-tooltip" role="tooltip">优先切换到最长未使用的候选 IP；若存在多个从未使用过的候选 IP，则随机选择其中一个。</span>
                   </span>
                 </div>
@@ -174,7 +174,7 @@
                   </thead>
                   <tbody>
                     {% for item in state.candidate_items %}
-                      <tr data-ip-row data-ip-value="{{ item.ip }}">
+                      <tr data-ip-row data-ip-value="{{ item.ip }}"{% if item.is_primary %} class="ip-row-primary"{% endif %}>
                         {% set last_used = describe_last_used(item.last_used_at) %}
                         <td class="ip-cell">
                           <div class="ip-cell-wrap">

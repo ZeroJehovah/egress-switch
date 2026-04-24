@@ -136,12 +136,13 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "候选出口 IP" not in body
     assert "VIP" not in body
     assert "ip-cell-value-primary" in body
+    assert 'class="ip-row-primary"' in body
     assert "当前使用中" in body
     assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body
     assert "切换到下一个 IP" in body
     assert "下一个 IP（最长未使用）" not in body
     assert "下一个 IP" in body
-    assert "Info" in body
+    assert 'aria-label="下一个 IP 选择规则"' in body
     assert "优先切换到最长未使用的候选 IP" in body
     assert f'quick-value {_describe_last_used("2026-04-23T10:00:00+00:00").tone_class}' in body
     assert "10.0.0.11" in body
