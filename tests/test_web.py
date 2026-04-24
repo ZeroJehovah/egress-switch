@@ -123,12 +123,15 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'src="/static/app.js?v=' in body
     assert "当前状态" in body
     assert "快捷操作" in body
+    assert "服务运行中" in body
+    assert 'class="toolbar-status"' in body
     assert "搜索 IP 地址..." in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
     assert "203.0.113.10" in body
     assert 'class="status-tile status-tile-active"' in body
     assert 'class="status-tile status-tile-public"' in body
+    assert 'class="card sidebar-card quick-card"' in body
     assert 'class="tile-value tile-value-egress"' in body
     assert 'class="tile-value tile-value-public"' in body
     assert "最近使用时间" in body
@@ -141,10 +144,12 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "ip-inline-badge" in body
     assert "主 IP" in body
     assert 'class="ip-row-primary"' in body
+    assert 'class="ip-row-current"' in body
     assert 'class="ip-table-col ip-table-col-ip"' in body
     assert 'class="ip-table-col ip-table-col-last-used"' in body
     assert 'class="ip-table-col ip-table-col-status"' in body
     assert 'class="ip-table-col ip-table-col-action"' in body
+    assert 'class="count-badge">2 个地址<' in body
     assert 'data-label="操作"' in body
     assert "当前使用中" in body
     assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body

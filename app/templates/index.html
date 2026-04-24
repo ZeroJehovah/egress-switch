@@ -40,6 +40,10 @@
         </div>
 
         <div class="toolbar">
+          <div class="toolbar-status{% if state.errors or not state.current_ip %} toolbar-status-warning{% endif %}">
+            <span class="toolbar-status-dot" aria-hidden="true"></span>
+            <span>{{ "服务运行中" if state.current_ip and not state.errors else "存在告警" }}</span>
+          </div>
           <button type="button" class="toolbar-button" data-refresh-page data-preserve-disabled="true">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" />
@@ -130,7 +134,7 @@
               </div>
             </section>
 
-            <section class="card sidebar-card">
+            <section class="card sidebar-card quick-card">
               <div class="section-head">
                 <div class="section-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -185,7 +189,7 @@
                 </div>
                 <div class="list-title-copy">
                   <h3>{{ state.interface }}上的可用地址</h3>
-                  <p>{{ state.candidate_ips|length }} 个地址</p>
+                  <span class="count-badge">{{ state.candidate_ips|length }} 个地址</span>
                 </div>
               </div>
 
@@ -217,7 +221,8 @@
                   </thead>
                   <tbody>
                     {% for item in state.candidate_items %}
-                      <tr data-ip-row data-ip-value="{{ item.ip }}"{% if item.is_primary %} class="ip-row-primary"{% endif %}>
+                      {% set row_class = ("ip-row-primary" if item.is_primary else "") ~ (" " if item.is_primary and item.ip == state.current_ip else "") ~ ("ip-row-current" if item.ip == state.current_ip else "") %}
+                      <tr data-ip-row data-ip-value="{{ item.ip }}"{% if row_class %} class="{{ row_class }}"{% endif %}>
                         {% set last_used = describe_last_used(item.last_used_at) %}
                         <td class="ip-cell" data-label="IP 地址">
                           <div class="ip-cell-wrap">
