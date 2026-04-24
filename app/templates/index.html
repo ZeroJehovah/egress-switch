@@ -39,19 +39,19 @@
         </div>
 
         <div class="toolbar">
-          <span class="service-pill">
-            <span class="service-dot"></span>
-            服务运行中
-          </span>
           <button type="button" class="toolbar-button" data-refresh-page data-preserve-disabled="true">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" />
             </svg>
-            刷新
+            <span>刷新</span>
           </button>
-          <button type="button" class="icon-button" data-theme-toggle data-preserve-disabled="true" aria-label="切换外观">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+          <button type="button" class="icon-button" data-theme-toggle data-preserve-disabled="true" aria-label="切换主题">
+            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2" />
+              <path d="M12 2.5v2.3M12 19.2v2.3M4.93 4.93l1.63 1.63M17.44 17.44l1.63 1.63M2.5 12h2.3M19.2 12h2.3M4.93 19.07l1.63-1.63M17.44 6.56l1.63-1.63" />
+            </svg>
+            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 14.79A9 9 0 0 1 9.21 4 7 7 0 1 0 20 14.79Z" />
             </svg>
           </button>
         </div>
@@ -84,56 +84,91 @@
 
         <div class="content-grid">
           <aside class="sidebar">
-            <section class="card status-card sidebar-panel">
-              <div class="card-head">
-                <div class="card-icon">
+            <section class="card sidebar-card">
+              <div class="section-head">
+                <div class="section-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 5h16v10H4zM8 21h8M12 15v6" />
+                    <path d="m12 3 7 3v5c0 4.2-2.4 8.06-6.2 9.94L12 21l-.8-.06C7.4 19.06 5 15.2 5 11V6z" />
+                    <path d="m9.2 11.8 1.9 1.9 3.7-4.5" />
                   </svg>
                 </div>
                 <h2>当前状态</h2>
               </div>
 
-              <div class="stat-group stat-surface stat-surface-hero">
-                <p class="stat-label">当前出站 IP</p>
-                <p class="stat-value stat-value-primary">{{ state.current_ip or "未读取到" }}</p>
+              <div class="status-stack">
+                <div class="status-tile status-tile-active">
+                  <div class="status-copy">
+                    <p class="tile-label">当前出站 IP</p>
+                    <p class="tile-value tile-value-egress">{{ state.current_ip or "未读取到" }}</p>
+                  </div>
+                  <div class="tile-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="12" cy="6" r="2.5" />
+                      <circle cx="6.5" cy="16.5" r="2.5" />
+                      <circle cx="17.5" cy="16.5" r="2.5" />
+                      <path d="M10.2 7.2 7.7 14M13.8 7.2l2.5 6.8M9 16.5h6" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="status-tile status-tile-public">
+                  <div class="status-copy">
+                    <p class="tile-label">当前公网 IPv4</p>
+                    <p class="tile-value tile-value-public">{{ state.public_ipv4 or "未获取" }}</p>
+                    {% if state.public_ipv4_error %}
+                      <p class="tile-note tile-note-error">{{ state.public_ipv4_error }}</p>
+                    {% endif %}
+                  </div>
+                  <div class="tile-symbol tile-symbol-blue" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="8.5" />
+                      <path d="M3.5 12h17M12 3.5a12 12 0 0 1 0 17M12 3.5a12 12 0 0 0 0 17" />
+                    </svg>
+                  </div>
+                </div>
               </div>
+            </section>
 
-              <div class="stat-group stat-surface">
-                <p class="stat-label">当前公网 IPv4</p>
-                <p class="stat-value stat-value-secondary">{{ state.public_ipv4 or "未获取" }}</p>
-                {% if state.public_ipv4_error %}
-                  <p class="stat-note error">{{ state.public_ipv4_error }}</p>
-                {% endif %}
-              </div>
-
-              <div class="card-divider" aria-hidden="true"></div>
-
-              <div class="subsection-head">
-                <div class="card-icon">
+            <section class="card sidebar-card">
+              <div class="section-head">
+                <div class="section-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M13 2 4 14h7l-1 8 10-14h-7z" />
                   </svg>
                 </div>
-                <h3>快捷操作</h3>
+                <h2>快捷操作</h2>
               </div>
 
               <form method="post" action="{{ url_for('switch_ip') }}" class="primary-action-form" data-ajax-switch-next-form>
                 <input type="hidden" name="target_ip" value="{{ next_ip or '' }}">
                 <button type="submit" class="primary-action-button" {% if not next_ip %}disabled{% endif %}>
-                  切换到下一个 IP
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 4v6h6" />
+                    <path d="M20 20v-6h-6" />
+                    <path d="M20 10a8 8 0 0 0-13.66-5.66L4 6" />
+                    <path d="M4 14a8 8 0 0 0 13.66 5.66L20 18" />
+                  </svg>
+                  <span>切换到下一个 IP</span>
                 </button>
               </form>
 
-              <div class="quick-stat stat-surface stat-surface-muted">
-                <div class="stat-label-row">
-                  <p class="stat-label">下一个 IP</p>
-                  <span class="info-tag" tabindex="0" aria-label="下一个 IP 选择规则" title="下一个 IP 选择规则">
-                    i
-                    <span class="info-tooltip" role="tooltip">优先切换到最长未使用的候选 IP；若存在多个从未使用过的候选 IP，则随机选择其中一个。</span>
-                  </span>
+              <p class="quick-note">
+                优先切换到最长未使用的候选 IP；若存在多个从未使用过的候选 IP，则随机选择其中一个。
+              </p>
+
+              <div class="next-ip-panel">
+                <div class="next-ip-copy">
+                  <p class="tile-label">下一个 IP</p>
+                  <p class="next-ip-value{% if next_last_used %} {{ next_last_used.tone_class }}{% elif not next_ip %} is-empty{% endif %}">
+                    {{ next_ip or "暂无" }}
+                  </p>
                 </div>
-                <p class="quick-value{% if next_last_used %} {{ next_last_used.tone_class }}{% elif not next_ip %} is-empty{% endif %}">{{ next_ip or "暂无" }}</p>
+                <div class="next-ip-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                  </svg>
+                </div>
               </div>
             </section>
           </aside>
@@ -141,23 +176,24 @@
           <section class="card main-card">
             <div class="list-toolbar">
               <div class="list-title">
-                <div class="card-icon">
+                <div class="section-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 18h4v2H4zm0-7h4v5H4zm0-7h4v5H4zm6 11h4v5h-4zm0-11h4v9h-4zm6 4h4v12h-4z" />
+                    <path d="M4 4h6v16H4zM14 4h6v9h-6zM14 16h6v4h-6z" />
+                    <path d="M7 8h.01M7 12h.01M7 16h.01M17 8h.01M17 19h.01" />
                   </svg>
                 </div>
                 <div class="list-title-copy">
-                  <h3>{{ state.interface }} 上的可用地址</h3>
+                  <h3>{{ state.interface }}上的可用地址</h3>
                   <p>{{ state.candidate_ips|length }} 个地址</p>
                 </div>
               </div>
 
               <label class="search-box">
-                <input type="search" placeholder="搜索 IP 地址..." data-ip-search>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <circle cx="11" cy="11" r="6.5" />
                   <path d="m16 16 4.5 4.5" />
                 </svg>
+                <input type="search" placeholder="搜索 IP 地址..." data-ip-search>
               </label>
             </div>
 
@@ -178,9 +214,9 @@
                         {% set last_used = describe_last_used(item.last_used_at) %}
                         <td class="ip-cell" data-label="IP 地址">
                           <div class="ip-cell-wrap">
-                            <span class="ip-cell-value{% if item.is_primary %} ip-cell-value-primary{% endif %}"{% if item.is_primary %} title="主要 IP"{% endif %}>{{ item.ip }}</span>
+                            <span class="ip-cell-value">{{ item.ip }}</span>
                             {% if item.is_primary %}
-                              <span class="ip-inline-badge">主要 IP</span>
+                              <span class="ip-inline-badge">主 IP</span>
                             {% endif %}
                           </div>
                         </td>

@@ -16,9 +16,26 @@
   let switchInFlight = false;
   let healthcheckTimerId = null;
 
+  const syncThemeToggleState = (theme) => {
+    if (!themeButton) {
+      return;
+    }
+
+    const isNight = theme === "night";
+    themeButton.setAttribute(
+      "aria-label",
+      isNight ? "当前为暗色模式，点击切换为亮色模式" : "当前为亮色模式，点击切换为暗色模式",
+    );
+    themeButton.setAttribute(
+      "title",
+      isNight ? "切换为亮色模式" : "切换为暗色模式",
+    );
+  };
+
   const applyTheme = (theme) => {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(themeStorageKey, theme);
+    syncThemeToggleState(theme);
   };
 
   const initializeTheme = () => {
