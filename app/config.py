@@ -8,6 +8,7 @@ from pathlib import Path
 from .env import load_env_file
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_PRIMARY_IP = "10.0.0.18"
 
 
 def _as_bool(value: str | None, default: bool = False) -> bool:
@@ -52,7 +53,7 @@ class Settings:
     debug: bool
     public_ip_api_url: str = "https://api.ipify.org?format=json"
     public_ip_cache_path: Path = BASE_DIR / ".run/public-ip-cache.json"
-    primary_ip: str | None = None
+    primary_ip: str | None = DEFAULT_PRIMARY_IP
     usage_history_path: Path = BASE_DIR / ".run/ip-usage-history.txt"
 
     @classmethod
@@ -81,7 +82,7 @@ class Settings:
                 os.getenv("SWITCH_IP_PUBLIC_IP_CACHE_PATH", ".run/public-ip-cache.json"),
                 BASE_DIR,
             ),
-            primary_ip=_normalize_optional_ipv4(os.getenv("SWITCH_IP_PRIMARY_IP")),
+            primary_ip=_normalize_optional_ipv4(os.getenv("SWITCH_IP_PRIMARY_IP") or DEFAULT_PRIMARY_IP),
             usage_history_path=_resolve_path(
                 os.getenv("SWITCH_IP_USAGE_HISTORY_PATH", ".run/ip-usage-history.txt"),
                 BASE_DIR,
