@@ -1,34 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="panel" x1="15" y1="15" x2="49" y2="49" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#55ecff" />
-      <stop offset="0.55" stop-color="#0aa7ff" />
-      <stop offset="1" stop-color="#0555d8" />
+    <linearGradient id="frame" x1="8" y1="7" x2="56" y2="57" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8bbcff" />
+      <stop offset="0.52" stop-color="#4f8bff" />
+      <stop offset="1" stop-color="#2558df" />
     </linearGradient>
-    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#10d6ff" flood-opacity="0.65" />
-      <feDropShadow dx="0" dy="0" stdDeviation="1.6" flood-color="#d9feff" flood-opacity="0.95" />
+    <linearGradient id="sheen" x1="14" y1="10" x2="36" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.46" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#102b78" flood-opacity="0.35" />
     </filter>
   </defs>
-  <rect width="64" height="64" rx="16" fill="#171d24" />
-  <g filter="url(#glow)">
-    <rect x="15" y="15" width="34" height="34" rx="10" fill="url(#panel)" stroke="#7bf6ff" stroke-width="1.5" />
-    <rect x="20" y="20" width="24" height="24" rx="7" fill="none" stroke="#e4fdff" stroke-opacity="0.9" stroke-width="1.5" />
-    <path
-      d="M39.5 24.5C36.8 22.4 33.9 21.4 30.8 21.4C26.2 21.4 23.2 23.7 23.2 27.2C23.2 30.8 26.3 31.8 31.1 32.7"
-      fill="none"
-      stroke="#e4fdff"
-      stroke-width="4.4"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <path
-      d="M31.1 32.7C35.6 33.5 38.2 34.8 38.2 38.3C38.2 42.5 34.7 45.2 29.7 45.2C26.3 45.2 23.3 44.1 20.6 41.8"
-      fill="none"
-      stroke="#e4fdff"
-      stroke-width="4.4"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </g>
+
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#frame)" stroke="#113ea9" stroke-width="2" />
+  <path
+    d="M15.5 10.5h30.5c5.4 0 8.4 2.7 8.9 7.9"
+    fill="none"
+    stroke="url(#sheen)"
+    stroke-linecap="round"
+    stroke-width="3"
+  />
+  <rect x="12" y="13" width="40" height="38" rx="8.5" fill="#0c1824" stroke="#aec9ff" stroke-opacity="0.7" stroke-width="1.5" />
+  <path
+    d="M41 22.6c-2.4-1.8-5.7-2.8-9.6-2.8c-6.5 0-10.3 2.8-10.3 6.9c0 4.8 4.3 6.1 10.9 7.1"
+    fill="none"
+    filter="url(#shadow)"
+    stroke="#eef5ff"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="6"
+  />
+  <path
+    d="M32 33.8c6.1 0.9 9.5 2.4 9.5 6.4c0 4.8-4.3 7.9-10.8 7.9c-4.3 0-8-1.3-10.8-3.9"
+    fill="none"
+    filter="url(#shadow)"
+    stroke="#eef5ff"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="6"
+  />
 </svg>

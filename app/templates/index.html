@@ -140,7 +140,7 @@
                   <input type="hidden" name="target_ip" value="{{ state.primary_ip or '' }}">
                   <button
                     type="submit"
-                    class="quick-action-button"
+                    class="quick-action-button quick-action-button-primary"
                     {% if not primary_ip_available or state.current_ip == state.primary_ip %}disabled{% endif %}
                   >
                     <span

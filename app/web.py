@@ -16,7 +16,8 @@ from app.services.native_switcher import read_direct_bind_address
 
 DISPLAY_TIMEZONE = timezone(timedelta(hours=8))
 MAX_REQUEST_LOG_TEXT_LENGTH = 240
-LAST_USED_TIME_NEVER_TEXT = "从未切换过"
+LAST_USED_TIME_EMPTY_TEXT = "--"
+LAST_USED_STATUS_NEVER_LABEL = "从未使用过"
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,9 +80,9 @@ def _parse_candidate_last_used_at(raw_value: str) -> datetime:
 def _describe_last_used(raw_value: str | None, *, now: datetime | None = None) -> LastUsedDisplayState:
     if not raw_value:
         return LastUsedDisplayState(
-            text=LAST_USED_TIME_NEVER_TEXT,
+            text=LAST_USED_TIME_EMPTY_TEXT,
             tone_class="usage-recency-none",
-            label=LAST_USED_TIME_NEVER_TEXT,
+            label=LAST_USED_STATUS_NEVER_LABEL,
         )
 
     formatted = _format_display_datetime(raw_value) or raw_value
@@ -92,7 +93,7 @@ def _describe_last_used(raw_value: str | None, *, now: datetime | None = None) -
         return LastUsedDisplayState(
             text=formatted,
             tone_class="usage-recency-none",
-            label=LAST_USED_TIME_NEVER_TEXT,
+            label=LAST_USED_STATUS_NEVER_LABEL,
         )
 
     reference_time = now or datetime.now(timezone.utc)

@@ -144,6 +144,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'class="tile-value tile-value-public"' in body
     assert 'class="quick-actions-grid"' in body
     assert 'class="quick-action-button"' in body
+    assert 'class="quick-action-button quick-action-button-primary"' in body
     assert "tile-symbol" not in body
     assert "最近使用时间" in body
     assert "2026-04-23 18:00:00" in body
@@ -187,6 +188,48 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "直接切换到指定地址" not in body
     assert "例如 145 或 10.0.0.145" not in body
     assert "仅供合法用途使用" not in body
+    assert "从未切换过" not in body
+
+
+def test_index_page_shows_never_used_status_without_last_used_copy(tmp_path: Path):
+    class NeverUsedDashboardService:
+        def build_state(self):
+            return DashboardState(
+                current_ip="10.0.0.11",
+                public_ipv4="203.0.113.11",
+                public_ipv4_error=None,
+                candidate_ips=["10.0.0.10", "10.0.0.11"],
+                candidate_items=[
+                    CandidateIPState(
+                        ip="10.0.0.10",
+                        last_used_at=None,
+                        is_primary=False,
+                    ),
+                    CandidateIPState(
+                        ip="10.0.0.11",
+                        last_used_at="2026-04-24T10:00:00+00:00",
+                        is_primary=True,
+                    ),
+                ],
+                errors=[],
+                interface="enp0s6",
+                config_path="/etc/sing-box/config.json",
+                primary_ip="10.0.0.11",
+            )
+
+    app = create_app(
+        build_settings(tmp_path),
+        dashboard_service=NeverUsedDashboardService(),
+        switch_service=FakeSwitchService(),
+    )
+    client = app.test_client()
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert '<span class="last-used-time">--</span>' in body
+    assert ">从未使用过<" in body
     assert "从未切换过" not in body
 
 
@@ -378,9 +421,9 @@ def test_describe_last_used_uses_four_recency_tiers():
 
 def test_describe_last_used_marks_never_used_as_neutral():
     assert _describe_last_used(None) == LastUsedDisplayState(
-        text="从未切换过",
+        text="--",
         tone_class="usage-recency-none",
-        label="从未切换过",
+        label="从未使用过",
     )
 
 
