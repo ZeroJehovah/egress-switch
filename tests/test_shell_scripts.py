@@ -32,6 +32,24 @@ def write_fake_bin(bin_dir: Path, name: str, content: str) -> None:
     target.chmod(0o755)
 
 
+def write_passthrough_sudo(bin_dir: Path) -> None:
+    write_fake_bin(
+        bin_dir,
+        "sudo",
+        textwrap.dedent(
+            """\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            printf '%s\\n' "$*" >> "${FAKE_SUDO_LOG}"
+            if [[ "$1" == "-n" ]]; then
+              shift
+            fi
+            exec "$@"
+            """
+        ),
+    )
+
+
 def test_start_script_exits_early_when_systemd_service_is_active(tmp_path: Path) -> None:
     repo_root = copy_runtime_scripts(tmp_path)
     fake_bin = tmp_path / "bin"
@@ -85,12 +103,78 @@ def test_start_script_exits_early_when_systemd_service_is_active(tmp_path: Path)
     assert "is-active --quiet switch-ip" in systemctl_calls
 
 
+def test_start_script_uses_passwordless_sudo_for_inactive_systemd_service(tmp_path: Path) -> None:
+    repo_root = copy_runtime_scripts(tmp_path)
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    systemctl_log = tmp_path / "systemctl.log"
+    sudo_log = tmp_path / "sudo.log"
+
+    write_fake_bin(
+        fake_bin,
+        "systemctl",
+        textwrap.dedent(
+            """\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            printf '%s\\n' "$*" >> "${FAKE_SYSTEMCTL_LOG}"
+            if [[ "$1" == "show" ]]; then
+              printf 'loaded\\n'
+              exit 0
+            fi
+            if [[ "$1" == "is-active" && "$2" == "--quiet" ]]; then
+              exit 3
+            fi
+            if [[ "$1" == "start" && "$2" == "switch-ip" ]]; then
+              exit 0
+            fi
+            printf 'unexpected systemctl call: %s\\n' "$*" >&2
+            exit 1
+            """
+        ),
+    )
+    write_passthrough_sudo(fake_bin)
+
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "PATH": f"{fake_bin}:{environment['PATH']}",
+            "FAKE_SYSTEMCTL_LOG": str(systemctl_log),
+            "FAKE_SUDO_LOG": str(sudo_log),
+            "PYTHON_BIN": "/definitely-missing-python",
+        }
+    )
+
+    result = subprocess.run(
+        ["bash", str(repo_root / "scripts" / "start.sh")],
+        cwd=repo_root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "通过 systemd 启动 switch-ip 服务: switch-ip" in result.stdout
+    assert "switch-ip 已启动" in result.stdout
+    assert not (repo_root / ".venv").exists()
+
+    systemctl_calls = systemctl_log.read_text(encoding="utf-8").splitlines()
+    assert "show --property=LoadState --value switch-ip" in systemctl_calls
+    assert "is-active --quiet switch-ip" in systemctl_calls
+    assert "start switch-ip" in systemctl_calls
+
+    sudo_calls = sudo_log.read_text(encoding="utf-8").splitlines()
+    assert "-n systemctl start switch-ip" in sudo_calls
+
+
 def test_update_script_uses_systemd_restart_for_active_service(tmp_path: Path) -> None:
     repo_root = copy_runtime_scripts(tmp_path)
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     systemctl_log = tmp_path / "systemctl.log"
     git_log = tmp_path / "git.log"
+    sudo_log = tmp_path / "sudo.log"
 
     write_fake_bin(
         fake_bin,
@@ -115,6 +199,7 @@ def test_update_script_uses_systemd_restart_for_active_service(tmp_path: Path) -
             """
         ),
     )
+    write_passthrough_sudo(fake_bin)
     write_fake_bin(
         fake_bin,
         "git",
@@ -138,6 +223,7 @@ def test_update_script_uses_systemd_restart_for_active_service(tmp_path: Path) -
             "PATH": f"{fake_bin}:{environment['PATH']}",
             "FAKE_SYSTEMCTL_LOG": str(systemctl_log),
             "FAKE_GIT_LOG": str(git_log),
+            "FAKE_SUDO_LOG": str(sudo_log),
             "PYTHON_BIN": "/definitely-missing-python",
         }
     )
@@ -158,10 +244,12 @@ def test_update_script_uses_systemd_restart_for_active_service(tmp_path: Path) -
 
     systemctl_calls = systemctl_log.read_text(encoding="utf-8").splitlines()
     assert "show --property=LoadState --value switch-ip" in systemctl_calls
-    assert "is-active --quiet switch-ip" in systemctl_calls
     assert "restart switch-ip" in systemctl_calls
     assert "stop switch-ip" not in systemctl_calls
     assert "start switch-ip" not in systemctl_calls
+
+    sudo_calls = sudo_log.read_text(encoding="utf-8").splitlines()
+    assert "-n systemctl restart switch-ip" in sudo_calls
 
     git_calls = git_log.read_text(encoding="utf-8")
     assert "diff --quiet" in git_calls

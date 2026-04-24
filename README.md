@@ -170,7 +170,7 @@ http://<server-ip>:8080
 ./scripts/update.sh
 ```
 
-如果当前 Web 服务已经由 `systemd` 托管运行，`start.sh`、`stop.sh`、`restart.sh`、`update.sh` 会优先调用对应的 `systemctl` 命令，避免再次手动拉起一份进程导致端口冲突。
+如果当前 Web 服务已经由 `systemd` 托管，`start.sh`、`stop.sh`、`restart.sh`、`update.sh` 会优先调用对应的 `systemctl` 命令，避免再次手动拉起一份进程导致端口冲突。非 root 用户执行这些脚本时，会自动尝试 `sudo -n systemctl ...`，因此请确保当前账号具备免密 sudo 权限。
 
 手动切换到指定 IP：
 
