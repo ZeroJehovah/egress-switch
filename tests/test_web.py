@@ -121,21 +121,29 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'href="/static/style.css?v=' in body
     assert 'src="/static/app.js?v=' in body
     assert "服务运行中" in body
-    assert "出口 IP 切换面板" in body
     assert "当前状态" in body
-    assert "快速操作" in body
+    assert "快捷操作" in body
     assert "搜索 IP 地址..." in body
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
     assert "203.0.113.10" in body
+    assert body.count('class="stat-value current"') >= 2
     assert "最近使用时间" in body
     assert "2026-04-23 18:00:00" in body
     assert "last-used-wrap" in body
-    assert "VIP" in body
+    assert "当前出站 IP（实际）" not in body
+    assert "配置文件" not in body
+    assert "候选出口 IP" not in body
+    assert "VIP" not in body
+    assert "ip-cell-value-primary" in body
     assert "当前使用中" in body
     assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body
     assert "切换到下一个 IP" in body
-    assert "下一个 IP（最长未使用）" in body
+    assert "下一个 IP（最长未使用）" not in body
+    assert "下一个 IP" in body
+    assert "Info" in body
+    assert "优先切换到最长未使用的候选 IP" in body
+    assert f'quick-value {_describe_last_used("2026-04-23T10:00:00+00:00").tone_class}' in body
     assert "10.0.0.11" in body
     assert 'action="/switch"' in body
     assert 'action="/switch/next"' not in body

@@ -84,7 +84,7 @@
 
         <div class="content-grid">
           <aside class="sidebar">
-            <section class="card status-card">
+            <section class="card status-card sidebar-panel">
               <div class="card-head">
                 <div class="card-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -95,42 +95,27 @@
               </div>
 
               <div class="stat-group">
-                <p class="stat-label">当前出站 IP（实际）</p>
-                <div class="stat-line">
-                  <p class="stat-value current">{{ state.current_ip or "未读取到" }}</p>
-                  {% if state.current_ip %}
-                    <span class="status-chip status-chip-green">使用中</span>
-                  {% endif %}
-                </div>
+                <p class="stat-label">当前出站 IP</p>
+                <p class="stat-value current">{{ state.current_ip or "未读取到" }}</p>
               </div>
 
               <div class="stat-group">
                 <p class="stat-label">当前公网 IPv4</p>
-                <p class="stat-value">{{ state.public_ipv4 or "未获取" }}</p>
+                <p class="stat-value current">{{ state.public_ipv4 or "未获取" }}</p>
                 {% if state.public_ipv4_error %}
                   <p class="stat-note error">{{ state.public_ipv4_error }}</p>
                 {% endif %}
               </div>
 
-              <div class="stat-group">
-                <p class="stat-label">配置文件</p>
-                <p class="stat-path">{{ state.config_path }}</p>
-              </div>
-            </section>
+              <div class="card-divider" aria-hidden="true"></div>
 
-            <section class="card action-card">
-              <div class="card-head">
+              <div class="subsection-head">
                 <div class="card-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M13 2 4 14h7l-1 8 10-14h-7z" />
                   </svg>
                 </div>
-                <h2>快速操作</h2>
-              </div>
-
-              <div class="section-intro">
-                <p class="section-kicker">出口 IP 切换面板</p>
-                <p class="section-copy">当前页面展示 sing-box `direct` 出站绑定 IP，以及 {{ state.interface }} 网卡上可切换的地址列表。</p>
+                <h3>快捷操作</h3>
               </div>
 
               <form method="post" action="{{ url_for('switch_ip') }}" class="primary-action-form" data-ajax-switch-next-form>
@@ -141,13 +126,14 @@
               </form>
 
               <div class="quick-stat">
-                <p class="stat-label">下一个 IP（最长未使用）</p>
-                <p class="quick-value">{{ next_ip or "暂无" }}</p>
-              </div>
-
-              <div class="quick-stat">
-                <p class="stat-label">候选出口 IP</p>
-                <p class="stat-text">{{ state.candidate_ips|length }} 个地址</p>
+                <div class="stat-label-row">
+                  <p class="stat-label">下一个 IP</p>
+                  <span class="info-tag" tabindex="0">
+                    Info
+                    <span class="info-tooltip" role="tooltip">优先切换到最长未使用的候选 IP；若存在多个从未使用过的候选 IP，则随机选择其中一个。</span>
+                  </span>
+                </div>
+                <p class="quick-value{% if next_last_used %} {{ next_last_used.tone_class }}{% elif not next_ip %} is-empty{% endif %}">{{ next_ip or "暂无" }}</p>
               </div>
             </section>
           </aside>
@@ -160,7 +146,7 @@
                     <path d="M4 18h4v2H4zm0-7h4v5H4zm0-7h4v5H4zm6 11h4v5h-4zm0-11h4v9h-4zm6 4h4v12h-4z" />
                   </svg>
                 </div>
-                <div>
+                <div class="list-title-copy">
                   <h3>{{ state.interface }} 上的可用地址</h3>
                   <p>{{ state.candidate_ips|length }} 个地址</p>
                 </div>
@@ -191,11 +177,8 @@
                       <tr data-ip-row data-ip-value="{{ item.ip }}">
                         {% set last_used = describe_last_used(item.last_used_at) %}
                         <td class="ip-cell">
-                          <div class="ip-cell-wrap{% if item.is_primary %} ip-cell-wrap-primary{% endif %}">
-                            <span class="ip-cell-value">{{ item.ip }}</span>
-                            {% if item.is_primary %}
-                              <span class="primary-badge" title="主要 IP">VIP</span>
-                            {% endif %}
+                          <div class="ip-cell-wrap">
+                            <span class="ip-cell-value{% if item.is_primary %} ip-cell-value-primary{% endif %}"{% if item.is_primary %} title="主要 IP"{% endif %}>{{ item.ip }}</span>
                           </div>
                         </td>
                         <td class="last-used-cell">

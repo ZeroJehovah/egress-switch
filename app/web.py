@@ -321,7 +321,15 @@ def create_app(
     def index():
         state = current_app.extensions["dashboard_service"].build_state()
         next_ip = get_next_candidate_ip(state.current_ip, state.candidate_items)
-        return render_template("index.html", state=state, next_ip=next_ip, settings=current_app.extensions["settings"])
+        next_candidate = next((item for item in state.candidate_items if item.ip == next_ip), None)
+        next_last_used = _describe_last_used(next_candidate.last_used_at) if next_candidate else None
+        return render_template(
+            "index.html",
+            state=state,
+            next_ip=next_ip,
+            next_last_used=next_last_used,
+            settings=current_app.extensions["settings"],
+        )
 
     @app.post("/switch")
     def switch_ip():
