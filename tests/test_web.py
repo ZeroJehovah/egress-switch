@@ -125,6 +125,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'icons/quick-actions.svg?v=' in body
     assert 'icons/network.svg?v=' in body
     assert 'icons/switch-next.svg?v=' in body
+    assert 'icons/calendar.svg?v=' in body
     assert 'icons/refresh.svg?v=' in body
     assert 'icons/theme-light.svg?v=' in body
     assert 'icons/theme-dark.svg?v=' in body
@@ -141,10 +142,13 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'class="card sidebar-card quick-card"' in body
     assert 'class="tile-value tile-value-egress"' in body
     assert 'class="tile-value tile-value-public"' in body
+    assert 'class="quick-actions-grid"' in body
+    assert 'class="quick-action-button"' in body
     assert "tile-symbol" not in body
     assert "最近使用时间" in body
     assert "2026-04-23 18:00:00" in body
     assert "last-used-wrap" in body
+    assert "last-used-icon" in body
     assert "当前出站 IP（实际）" not in body
     assert "配置文件" not in body
     assert "候选出口 IP" not in body
@@ -161,7 +165,8 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'data-label="操作"' in body
     assert "当前使用中" in body
     assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body
-    assert "切换到下一个 IP" in body
+    assert "主IP" in body
+    assert "下一个" in body
     assert "下一个 IP（最长未使用）" not in body
     assert "下一个 IP" in body
     assert "优先切换到最长未使用的候选 IP" in body

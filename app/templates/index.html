@@ -134,17 +134,36 @@
                 <h2>快捷操作</h2>
               </div>
 
-              <form method="post" action="{{ url_for('switch_ip') }}" class="primary-action-form" data-ajax-switch-next-form>
-                <input type="hidden" name="target_ip" value="{{ next_ip or '' }}">
-                <button type="submit" class="primary-action-button" {% if not next_ip %}disabled{% endif %}>
-                  <span
-                    class="mask-icon button-icon button-icon-strong"
-                    aria-hidden="true"
-                    style="--icon-url: url('{{ static_asset_url('icons/switch-next.svg') }}');"
-                  ></span>
-                  <span>切换到下一个 IP</span>
-                </button>
-              </form>
+              {% set primary_ip_available = state.primary_ip and state.primary_ip in state.candidate_ips %}
+              <div class="quick-actions-grid">
+                <form method="post" action="{{ url_for('switch_ip') }}" class="quick-action-form" data-ajax-switch-form>
+                  <input type="hidden" name="target_ip" value="{{ state.primary_ip or '' }}">
+                  <button
+                    type="submit"
+                    class="quick-action-button"
+                    {% if not primary_ip_available or state.current_ip == state.primary_ip %}disabled{% endif %}
+                  >
+                    <span
+                      class="mask-icon button-icon"
+                      aria-hidden="true"
+                      style="--icon-url: url('{{ static_asset_url('icons/switch-next.svg') }}');"
+                    ></span>
+                    <span>主IP</span>
+                  </button>
+                </form>
+
+                <form method="post" action="{{ url_for('switch_ip') }}" class="quick-action-form" data-ajax-switch-next-form>
+                  <input type="hidden" name="target_ip" value="{{ next_ip or '' }}">
+                  <button type="submit" class="quick-action-button" {% if not next_ip %}disabled{% endif %}>
+                    <span
+                      class="mask-icon button-icon"
+                      aria-hidden="true"
+                      style="--icon-url: url('{{ static_asset_url('icons/switch-next.svg') }}');"
+                    ></span>
+                    <span>下一个</span>
+                  </button>
+                </form>
+              </div>
 
               <p class="quick-note">
                 优先切换到最长未使用的候选 IP；若存在多个从未使用过的候选 IP，则随机选择其中一个。
@@ -218,6 +237,13 @@
                         </td>
                         <td class="last-used-cell" data-label="最近使用时间">
                           <div class="last-used-wrap {{ last_used.tone_class }}">
+                            {% if item.last_used_at %}
+                              <span
+                                class="mask-icon last-used-icon"
+                                aria-hidden="true"
+                                style="--icon-url: url('{{ static_asset_url('icons/calendar.svg') }}');"
+                              ></span>
+                            {% endif %}
                             <span class="last-used-time">{{ last_used.text }}</span>
                           </div>
                         </td>
