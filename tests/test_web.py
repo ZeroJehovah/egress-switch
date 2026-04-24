@@ -127,7 +127,9 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "10.0.0.10" in body
     assert "10.0.0.11" in body
     assert "203.0.113.10" in body
-    assert body.count('class="stat-value current"') >= 2
+    assert 'class="stat-group stat-surface stat-surface-hero"' in body
+    assert 'class="stat-value stat-value-primary"' in body
+    assert 'class="stat-value stat-value-secondary"' in body
     assert "最近使用时间" in body
     assert "2026-04-23 18:00:00" in body
     assert "last-used-wrap" in body
@@ -136,7 +138,9 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "候选出口 IP" not in body
     assert "VIP" not in body
     assert "ip-cell-value-primary" in body
+    assert "主要 IP" in body
     assert 'class="ip-row-primary"' in body
+    assert 'data-label="操作"' in body
     assert "当前使用中" in body
     assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body
     assert "切换到下一个 IP" in body

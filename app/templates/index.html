@@ -94,14 +94,14 @@
                 <h2>当前状态</h2>
               </div>
 
-              <div class="stat-group">
+              <div class="stat-group stat-surface stat-surface-hero">
                 <p class="stat-label">当前出站 IP</p>
-                <p class="stat-value current">{{ state.current_ip or "未读取到" }}</p>
+                <p class="stat-value stat-value-primary">{{ state.current_ip or "未读取到" }}</p>
               </div>
 
-              <div class="stat-group">
+              <div class="stat-group stat-surface">
                 <p class="stat-label">当前公网 IPv4</p>
-                <p class="stat-value current">{{ state.public_ipv4 or "未获取" }}</p>
+                <p class="stat-value stat-value-secondary">{{ state.public_ipv4 or "未获取" }}</p>
                 {% if state.public_ipv4_error %}
                   <p class="stat-note error">{{ state.public_ipv4_error }}</p>
                 {% endif %}
@@ -125,7 +125,7 @@
                 </button>
               </form>
 
-              <div class="quick-stat">
+              <div class="quick-stat stat-surface stat-surface-muted">
                 <div class="stat-label-row">
                   <p class="stat-label">下一个 IP</p>
                   <span class="info-tag" tabindex="0" aria-label="下一个 IP 选择规则" title="下一个 IP 选择规则">
@@ -176,17 +176,20 @@
                     {% for item in state.candidate_items %}
                       <tr data-ip-row data-ip-value="{{ item.ip }}"{% if item.is_primary %} class="ip-row-primary"{% endif %}>
                         {% set last_used = describe_last_used(item.last_used_at) %}
-                        <td class="ip-cell">
+                        <td class="ip-cell" data-label="IP 地址">
                           <div class="ip-cell-wrap">
                             <span class="ip-cell-value{% if item.is_primary %} ip-cell-value-primary{% endif %}"{% if item.is_primary %} title="主要 IP"{% endif %}>{{ item.ip }}</span>
+                            {% if item.is_primary %}
+                              <span class="ip-inline-badge">主要 IP</span>
+                            {% endif %}
                           </div>
                         </td>
-                        <td class="last-used-cell">
+                        <td class="last-used-cell" data-label="最近使用时间">
                           <div class="last-used-wrap {{ last_used.tone_class }}">
                             <span class="last-used-time">{{ last_used.text }}</span>
                           </div>
                         </td>
-                        <td>
+                        <td data-label="状态">
                           <div class="status-chip-group">
                             {% if item.ip == state.current_ip %}
                               <span class="status-chip status-chip-green">当前使用中</span>
@@ -195,7 +198,7 @@
                             {% endif %}
                           </div>
                         </td>
-                        <td class="action-cell">
+                        <td class="action-cell" data-label="操作">
                           <form method="post" action="{{ url_for('switch_ip') }}" class="inline-action-form" data-ajax-switch-form>
                             <input type="hidden" name="target_ip" value="{{ item.ip }}">
                             <button type="submit" class="table-action-button" {% if item.ip == state.current_ip %}disabled{% endif %}>

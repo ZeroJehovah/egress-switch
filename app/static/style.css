@@ -408,6 +408,27 @@ svg {
   margin-top: 24px;
 }
 
+.stat-surface {
+  padding: 18px 18px 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--panel-soft) 0%, var(--panel) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.stat-surface-hero {
+  border-color: rgba(77, 140, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(77, 140, 255, 0.08) 0%, rgba(77, 140, 255, 0.02) 100%),
+    linear-gradient(180deg, var(--panel-soft) 0%, var(--panel) 100%);
+}
+
+.stat-surface-muted {
+  background:
+    linear-gradient(180deg, rgba(148, 163, 184, 0.06) 0%, rgba(148, 163, 184, 0.02) 100%),
+    linear-gradient(180deg, var(--panel-soft) 0%, var(--panel) 100%);
+}
+
 .subsection-head {
   display: flex;
   align-items: center;
@@ -447,14 +468,19 @@ svg {
   letter-spacing: -0.02em;
 }
 
-.stat-value.current {
+.stat-value-primary {
   font-size: clamp(1.7rem, 2.3vw, 2.25rem);
   color: var(--success);
 }
 
+.stat-value-secondary {
+  font-size: clamp(1.18rem, 1.2vw + 0.9rem, 1.45rem);
+  color: var(--text);
+}
+
 .quick-value {
   margin: 0;
-  font-size: clamp(1.7rem, 2.3vw, 2.25rem);
+  font-size: clamp(1.25rem, 1.15vw + 0.98rem, 1.55rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text);
@@ -480,6 +506,7 @@ svg {
   min-height: 30px;
   padding: 0 12px;
   border-radius: 10px;
+  border: 1px solid transparent;
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -487,6 +514,7 @@ svg {
 .status-chip-green {
   color: var(--success);
   background: var(--success-soft);
+  border-color: rgba(42, 157, 91, 0.18);
 }
 
 .status-chip-blue {
@@ -599,7 +627,7 @@ svg {
 
 .list-toolbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 14px;
@@ -645,7 +673,7 @@ svg {
 
 .table-shell {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   background: var(--panel);
 }
@@ -657,7 +685,7 @@ svg {
 
 .ip-table th,
 .ip-table td {
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   text-align: left;
   vertical-align: middle;
@@ -676,7 +704,24 @@ svg {
 
 .ip-table tbody tr.ip-row-primary,
 .ip-table tbody tr.ip-row-primary:hover {
-  background: linear-gradient(90deg, var(--vip-row-bg) 0%, var(--vip-row-bg) 18%, var(--panel) 34%, var(--panel) 100%);
+  background: linear-gradient(90deg, var(--vip-row-bg) 0%, rgba(212, 175, 55, 0.06) 16%, transparent 42%);
+}
+
+.ip-table tbody tr.ip-row-primary td:first-child {
+  position: relative;
+  padding-left: 20px;
+}
+
+.ip-table tbody tr.ip-row-primary td:first-child::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 4px;
+  height: calc(100% - 12px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--vip-border-strong) 0%, var(--vip-border) 100%);
+  transform: translateY(-50%);
 }
 
 .ip-table tbody tr:last-child td {
@@ -706,8 +751,22 @@ svg {
 }
 
 .ip-cell-value-primary {
-  color: inherit;
-  text-shadow: none;
+  color: var(--text);
+}
+
+.ip-inline-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--vip-border);
+  background: var(--vip-bg);
+  color: var(--vip-text);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 16px var(--vip-glow);
 }
 
 .last-used-cell {
@@ -720,8 +779,8 @@ svg {
   gap: 8px;
   flex-wrap: wrap;
   max-width: 100%;
-  padding: 7px 10px 7px 12px;
-  border-radius: 12px;
+  padding: 6px 10px 6px 11px;
+  border-radius: 11px;
   border: 1px solid var(--usage-none-border);
   background: var(--usage-none-surface);
   color: var(--usage-none);
@@ -739,7 +798,7 @@ svg {
 
 .last-used-time {
   color: inherit;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -749,10 +808,10 @@ svg {
 }
 
 .ip-table .status-chip {
-  min-height: 26px;
-  padding: 0 10px;
+  min-height: 24px;
+  padding: 0 9px;
   border-radius: 9px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 .last-used-wrap.usage-recency-hot,
@@ -845,8 +904,8 @@ svg {
 }
 
 .table-action-button {
-  min-height: 32px;
-  padding: 0 12px;
+  min-height: 30px;
+  padding: 0 11px;
   border-radius: 9px;
   border: 1px solid var(--table-button-border);
   background: var(--table-button-bg);
@@ -964,12 +1023,31 @@ svg {
   }
 
   .ip-table td {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
     padding: 0;
     border: 0;
   }
 
+  .ip-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
   .ip-table td + td {
     margin-top: 10px;
+  }
+
+  .ip-table tbody tr.ip-row-primary td:first-child {
+    padding-left: 0;
+  }
+
+  .ip-table tbody tr.ip-row-primary td:first-child::before {
+    display: none;
   }
 
   .action-cell {
