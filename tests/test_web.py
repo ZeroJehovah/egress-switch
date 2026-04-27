@@ -176,7 +176,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "next-ip-arrow" not in body
     assert "10.0.0.11" in body
     assert 'action="/switch"' in body
-    assert 'action="/switch/next"' not in body
+    assert 'action="/switch/next"' in body
     assert "switch-progress" in body
     assert 'data-ajax-switch-form' in body
     assert 'data-ajax-switch-next-form' in body
@@ -381,6 +381,18 @@ def test_get_next_candidate_ip_uses_first_when_current_missing():
             CandidateIPState(ip="10.0.0.11", last_used_at="2026-04-24T10:00:00+00:00", is_primary=False),
         ],
     ) == "10.0.0.10"
+
+
+def test_get_next_candidate_ip_returns_none_when_only_current_candidate():
+    assert (
+        get_next_candidate_ip(
+            "10.0.0.10",
+            [
+                CandidateIPState(ip="10.0.0.10", last_used_at="2026-04-23T10:00:00+00:00", is_primary=False),
+            ],
+        )
+        is None
+    )
 
 
 def test_get_next_candidate_ip_prefers_never_used_candidates():

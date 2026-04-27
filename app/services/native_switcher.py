@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import ipaddress
 import json
+import os
 import shutil
+import stat
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -48,6 +51,36 @@ def _read_config(config_path: Path) -> dict:
     return json.loads(config_path.read_text(encoding="utf-8"))
 
 
+def _write_config(config_path: Path, data: dict) -> None:
+    config_stat = config_path.stat()
+    content = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    temp_path: Path | None = None
+    temp_fd, temp_name = tempfile.mkstemp(
+        prefix=f".{config_path.name}.",
+        suffix=".tmp",
+        dir=config_path.parent,
+    )
+    temp_path = Path(temp_name)
+
+    try:
+        with os.fdopen(temp_fd, "w", encoding="utf-8") as temp_file:
+            temp_file.write(content)
+            temp_file.flush()
+            os.fsync(temp_file.fileno())
+
+        os.chmod(temp_path, stat.S_IMODE(config_stat.st_mode))
+        try:
+            os.chown(temp_path, config_stat.st_uid, config_stat.st_gid)
+        except OSError:
+            pass
+
+        os.replace(temp_path, config_path)
+        temp_path = None
+    finally:
+        if temp_path is not None and temp_path.exists():
+            temp_path.unlink()
+
+
 def read_direct_bind_address(config_path: Path) -> str | None:
     data = _read_config(config_path)
     for outbound in data.get("outbounds", []):
@@ -64,10 +97,7 @@ def write_direct_bind_address(config_path: Path, target_ip: str) -> None:
     for outbound in outbounds:
         if outbound.get("tag") == "direct":
             outbound["inet4_bind_address"] = target_ip
-            config_path.write_text(
-                json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
+            _write_config(config_path, data)
             return
 
     raise NativeSwitchError("没有找到 tag 为 direct 的 outbound")
@@ -103,6 +133,16 @@ def list_interface_ipv4_addresses(
     return sorted(set(addresses), key=ipaddress.IPv4Address)
 
 
+def _build_backup_path(config_path: Path) -> Path:
+    timestamp = datetime.now().strftime("%F-%H%M%S-%f")
+    backup_path = config_path.with_name(f"{config_path.name}.bak.{timestamp}")
+    suffix = 1
+    while backup_path.exists():
+        backup_path = config_path.with_name(f"{config_path.name}.bak.{timestamp}.{suffix}")
+        suffix += 1
+    return backup_path
+
+
 class NativeSwitcher:
     def __init__(
         self,
@@ -118,14 +158,13 @@ class NativeSwitcher:
         config_path = Path(self.settings.singbox_config_path)
         self.ensure_target_ip_is_bound(target_ip)
 
-        timestamp = datetime.now().strftime("%F-%H%M%S")
-        backup_path = config_path.with_name(f"{config_path.name}.bak.{timestamp}")
+        backup_path = _build_backup_path(config_path)
         shutil.copy2(config_path, backup_path)
 
         write_direct_bind_address(config_path, target_ip)
 
         check_result = self.runner(
-            [self.settings.singbox_bin, "check"],
+            [self.settings.singbox_bin, "check", "-c", str(config_path)],
             self.settings.command_timeout,
             cwd=config_path.parent,
         )
@@ -140,13 +179,34 @@ class NativeSwitcher:
         )
         if restart_result.returncode != 0:
             detail = restart_result.stderr.strip() or restart_result.stdout.strip() or "systemctl restart 执行失败"
-            raise NativeSwitchError(f"重启服务失败: {detail}")
+            try:
+                shutil.copy2(backup_path, config_path)
+            except OSError as exc:
+                raise NativeSwitchError(f"重启服务失败且回滚配置失败: {detail}; 回滚错误: {exc}") from exc
 
-        service_status = self._run_text_command(
-            ["systemctl", "--no-pager", "--full", "status", self.settings.singbox_service_name]
+            recovery_result = self.runner(
+                ["systemctl", "restart", self.settings.singbox_service_name],
+                self.settings.command_timeout,
+            )
+            if recovery_result.returncode != 0:
+                recovery_detail = (
+                    recovery_result.stderr.strip()
+                    or recovery_result.stdout.strip()
+                    or "systemctl restart 执行失败"
+                )
+                raise NativeSwitchError(
+                    f"重启服务失败，已回滚配置，但恢复服务也失败: {detail}; 恢复失败: {recovery_detail}"
+                )
+
+            raise NativeSwitchError(f"重启服务失败，已回滚配置并恢复原服务配置: {detail}")
+
+        service_status = self._run_optional_text_command(
+            ["systemctl", "--no-pager", "--full", "status", self.settings.singbox_service_name],
+            failure_prefix="服务状态读取失败",
         )
-        recent_logs = self._run_text_command(
-            ["journalctl", "-u", self.settings.singbox_service_name, "-n", "8", "--no-pager"]
+        recent_logs = self._run_optional_text_command(
+            ["journalctl", "-u", self.settings.singbox_service_name, "-n", "8", "--no-pager"],
+            failure_prefix="最近日志读取失败",
         )
         current_ip = read_direct_bind_address(config_path)
         public_ipv4 = None
@@ -185,9 +245,9 @@ class NativeSwitcher:
                 f"{target_ip} 没有绑定在接口 {self.settings.interface} 上\n当前 {self.settings.interface} 上的 IPv4:\n{joined}"
             )
 
-    def _run_text_command(self, command: list[str]) -> str:
+    def _run_optional_text_command(self, command: list[str], *, failure_prefix: str) -> str:
         result = self.runner(command, self.settings.command_timeout)
         if result.returncode != 0:
             detail = result.stderr.strip() or result.stdout.strip() or "命令执行失败"
-            raise NativeSwitchError(f"{' '.join(command)} 执行失败: {detail}")
+            return f"{failure_prefix}: {detail}"
         return result.stdout.strip()

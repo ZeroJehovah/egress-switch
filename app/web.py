@@ -144,7 +144,7 @@ def get_next_candidate_ip(
         return None
 
     eligible_items = candidate_items
-    if len(candidate_items) > 1 and current_ip is not None:
+    if current_ip is not None:
         eligible_items = [item for item in candidate_items if item.ip != current_ip]
 
     if not eligible_items:

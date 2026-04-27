@@ -724,8 +724,8 @@ svg {
 }
 
 .ip-table th {
-  height: 58px;
-  padding: 0 18px;
+  height: 50px;
+  padding: 0 16px;
   color: color-mix(in srgb, var(--text) 92%, white 8%);
   text-align: left;
   font-size: 15px;
@@ -737,14 +737,14 @@ svg {
 
 .ip-table th:first-child,
 .ip-table td.ip-cell {
-  padding-left: 24px;
+  padding-left: 20px;
 }
 
 .ip-table td {
-  height: 56px;
-  padding: 0 18px;
+  height: 48px;
+  padding: 0 16px;
   color: var(--text);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 760;
   line-height: 1;
   vertical-align: middle;
@@ -767,6 +767,14 @@ svg {
 .ip-table tbody tr.ip-row-current,
 .ip-table tbody tr.ip-row-current:hover {
   background: var(--current-row-bg);
+}
+
+.ip-table tbody tr.ip-row-primary:not(.ip-row-current) {
+  background: linear-gradient(90deg, var(--primary-badge-bg), transparent 58%);
+}
+
+.ip-table tbody tr.ip-row-primary:not(.ip-row-current):hover {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary-badge-bg) 78%, var(--table-row-hover)), var(--table-row-hover) 58%);
 }
 
 .ip-table tbody tr.ip-row-current td.ip-cell {
@@ -819,11 +827,11 @@ svg {
 .last-used-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   max-width: 100%;
-  min-height: 30px;
-  padding: 5px 11px;
-  border-radius: 9px;
+  min-height: 26px;
+  padding: 4px 9px;
+  border-radius: 8px;
   border: 1px solid var(--usage-none-border);
   background: var(--usage-none-surface);
   color: var(--usage-none-text);
@@ -838,7 +846,7 @@ svg {
 
 .last-used-time {
   color: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 850;
   white-space: nowrap;
 }
@@ -846,11 +854,11 @@ svg {
 .status-chip {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 5px 11px;
-  border-radius: 9px;
+  min-height: 26px;
+  padding: 4px 9px;
+  border-radius: 8px;
   border: 1px solid transparent;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 850;
   line-height: 1;
   white-space: nowrap;
@@ -964,17 +972,17 @@ svg {
 }
 
 .table-action-button {
-  min-width: 128px;
-  height: 38px;
-  padding: 0 13px;
-  border-radius: 10px;
+  min-width: 112px;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 9px;
   border: 1px solid color-mix(in srgb, var(--blue-2) 72%, transparent);
   background: var(--table-button-bg);
   color: var(--blue-2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
   cursor: pointer;
   white-space: nowrap;

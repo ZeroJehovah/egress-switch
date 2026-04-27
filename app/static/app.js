@@ -153,9 +153,7 @@
   nextSwitchForms.forEach((form) => {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const targetIp = new FormData(form).get("target_ip");
-      const body = new URLSearchParams({ target_ip: String(targetIp ?? "") });
-      sendAjaxSwitch("/api/switch", body);
+      sendAjaxSwitch("/api/switch/next", new URLSearchParams());
     });
   });
 
