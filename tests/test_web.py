@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import re
 
 from app.config import Settings
 from app.services.dashboard_service import CandidateIPState, DashboardState
@@ -176,10 +177,9 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "next-ip-arrow" not in body
     assert "10.0.0.11" in body
     assert 'action="/switch"' in body
-    assert 'action="/switch/next"' in body
     assert "switch-progress" in body
     assert 'data-ajax-switch-form' in body
-    assert 'data-ajax-switch-next-form' in body
+    assert 'data-ajax-switch-next-form' not in body
     assert 'data-ip-search' in body
     assert 'data-refresh-page' in body
     assert 'data-theme-toggle' in body
@@ -302,15 +302,51 @@ def test_switch_next_route_rotates_to_next_candidate(tmp_path: Path):
 
 
 def test_quick_switch_form_posts_rendered_next_ip(tmp_path: Path):
+    class CurrentPrimaryDashboardService:
+        def build_state(self):
+            return DashboardState(
+                current_ip="10.0.0.11",
+                public_ipv4="203.0.113.11",
+                public_ipv4_error=None,
+                candidate_ips=["10.0.0.10", "10.0.0.11"],
+                candidate_items=[
+                    CandidateIPState(
+                        ip="10.0.0.10",
+                        last_used_at="2026-04-23T10:00:00+00:00",
+                        is_primary=False,
+                    ),
+                    CandidateIPState(
+                        ip="10.0.0.11",
+                        last_used_at="2026-04-24T10:00:00+00:00",
+                        is_primary=True,
+                    ),
+                ],
+                errors=[],
+                interface="enp0s6",
+                config_path="/etc/sing-box/config.json",
+                primary_ip="10.0.0.11",
+            )
+
     fake_switch_service = FakeSwitchService()
-    app = create_app(build_settings(tmp_path), dashboard_service=FakeDashboardService(), switch_service=fake_switch_service)
+    app = create_app(
+        build_settings(tmp_path),
+        dashboard_service=CurrentPrimaryDashboardService(),
+        switch_service=fake_switch_service,
+    )
     client = app.test_client()
 
-    response = client.post("/switch", data={"target_ip": "10.0.0.11"}, follow_redirects=True)
+    page_response = client.get("/")
+    body = page_response.get_data(as_text=True)
+    assert re.search(
+        r'<form method="post" action="/switch" class="quick-action-form" data-ajax-switch-form>\s*'
+        r'<input type="hidden" name="target_ip" value="10\.0\.0\.10">[\s\S]*?<span>下一个</span>',
+        body,
+    )
+
+    response = client.post("/switch", data={"target_ip": "10.0.0.10"}, follow_redirects=True)
 
     assert response.status_code == 200
-    assert fake_switch_service.last_target == "10.0.0.11"
-    assert "已切换到 10.0.0.11" in response.get_data(as_text=True)
+    assert fake_switch_service.last_target == "10.0.0.10"
 
 
 def test_web_access_whitelist_allows_loopback_without_public_ip_cache(tmp_path: Path):

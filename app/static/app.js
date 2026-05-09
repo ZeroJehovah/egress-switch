@@ -6,7 +6,6 @@
 
   const progressNode = document.querySelector("#switch-progress");
   const switchForms = document.querySelectorAll("[data-ajax-switch-form]");
-  const nextSwitchForms = document.querySelectorAll("[data-ajax-switch-next-form]");
   const searchInput = document.querySelector("[data-ip-search]");
   const ipRows = Array.from(document.querySelectorAll("[data-ip-row]"));
   const emptySearchNode = document.querySelector("[data-ip-empty]");
@@ -147,13 +146,6 @@
       const targetIp = new FormData(form).get("target_ip");
       const body = new URLSearchParams({ target_ip: String(targetIp ?? "") });
       sendAjaxSwitch("/api/switch", body);
-    });
-  });
-
-  nextSwitchForms.forEach((form) => {
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      sendAjaxSwitch("/api/switch/next", new URLSearchParams());
     });
   });
 
