@@ -737,12 +737,12 @@ svg {
 }
 
 .ip-table td {
-  height: 48px;
-  padding: 0 16px;
+  height: 58px;
+  padding: 0 18px;
   color: var(--text);
   font-size: 15px;
   font-weight: 760;
-  line-height: 1;
+  line-height: 1.25;
   vertical-align: middle;
   font-variant-numeric: tabular-nums;
 }
@@ -817,8 +817,8 @@ svg {
   align-items: center;
   gap: 7px;
   max-width: 100%;
-  min-height: 26px;
-  padding: 4px 9px;
+  min-height: 32px;
+  padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid var(--usage-none-border);
   background: var(--usage-none-surface);

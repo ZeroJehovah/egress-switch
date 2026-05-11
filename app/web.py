@@ -18,6 +18,7 @@ DISPLAY_TIMEZONE = timezone(timedelta(hours=8))
 MAX_REQUEST_LOG_TEXT_LENGTH = 240
 LAST_USED_TIME_EMPTY_TEXT = "--"
 LAST_USED_STATUS_NEVER_LABEL = "从未使用过"
+CURRENT_USAGE_TONE_CLASS = "usage-recency-current"
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,8 +150,7 @@ def _describe_usage_window(
         if is_current:
             return LastUsedDisplayState(
                 text=f"{LAST_USED_TIME_EMPTY_TEXT} - 当前使用中",
-                tone_class="usage-recency-hot",
-                label="1天内使用过",
+                tone_class=CURRENT_USAGE_TONE_CLASS,
             )
 
         return LastUsedDisplayState(
@@ -163,8 +163,7 @@ def _describe_usage_window(
     if is_current:
         return LastUsedDisplayState(
             text=f"{formatted_start} - 当前使用中",
-            tone_class="usage-recency-hot",
-            label="1天内使用过",
+            tone_class=CURRENT_USAGE_TONE_CLASS,
         )
 
     if not ended_at:

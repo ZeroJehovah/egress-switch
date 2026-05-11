@@ -153,6 +153,14 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "使用时间" in body
     assert "最近使用时间" not in body
     assert "2026-04-24 18:00:00 - 当前使用中" in body
+    assert re.search(
+        r'class="last-used-wrap usage-recency-current">[\s\S]*?2026-04-24 18:00:00 - 当前使用中',
+        body,
+    )
+    assert not re.search(
+        r'class="last-used-wrap usage-recency-(?:hot|warm|mild|cool)">[\s\S]*?2026-04-24 18:00:00 - 当前使用中',
+        body,
+    )
     assert "2026-04-23 18:00:00 - 2026-04-23 20:00:00" in body
     assert "last-used-wrap" in body
     assert "last-used-icon" in body
@@ -528,8 +536,7 @@ def test_describe_usage_window_displays_current_usage():
         is_current=True,
     ) == LastUsedDisplayState(
         text="2026-04-24 18:00:00 - 当前使用中",
-        tone_class="usage-recency-hot",
-        label="1天内使用过",
+        tone_class="usage-recency-current",
     )
 
 
