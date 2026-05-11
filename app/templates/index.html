@@ -210,14 +210,12 @@
                   <colgroup>
                     <col class="ip-table-col ip-table-col-ip">
                     <col class="ip-table-col ip-table-col-last-used">
-                    <col class="ip-table-col ip-table-col-status">
                     <col class="ip-table-col ip-table-col-action">
                   </colgroup>
                   <thead>
                     <tr>
                       <th>IP 地址</th>
-                      <th>最近使用时间</th>
-                      <th>状态</th>
+                      <th>使用时间</th>
                       <th class="action-column">操作</th>
                     </tr>
                   </thead>
@@ -225,7 +223,7 @@
                     {% for item in state.candidate_items %}
                       {% set row_class = ("ip-row-primary" if item.is_primary else "") ~ (" " if item.is_primary and item.ip == state.current_ip else "") ~ ("ip-row-current" if item.ip == state.current_ip else "") %}
                       <tr data-ip-row data-ip-value="{{ item.ip }}"{% if row_class %} class="{{ row_class }}"{% endif %}>
-                        {% set last_used = describe_last_used(item.last_used_at) %}
+                        {% set usage_window = describe_usage_window(item.usage_started_at, item.usage_ended_at, is_current=(item.ip == state.current_ip)) %}
                         <td class="ip-cell" data-label="IP 地址">
                           <div class="ip-cell-wrap">
                             <span class="ip-cell-value">{{ item.ip }}</span>
@@ -234,25 +232,16 @@
                             {% endif %}
                           </div>
                         </td>
-                        <td class="last-used-cell" data-label="最近使用时间">
-                          <div class="last-used-wrap {{ last_used.tone_class }}">
-                            {% if item.last_used_at %}
+                        <td class="last-used-cell" data-label="使用时间">
+                          <div class="last-used-wrap {{ usage_window.tone_class }}">
+                            {% if item.usage_started_at %}
                               <span
                                 class="mask-icon last-used-icon"
                                 aria-hidden="true"
                                 style="--icon-url: url('{{ static_asset_url('icons/calendar.svg') }}');"
                               ></span>
                             {% endif %}
-                            <span class="last-used-time">{{ last_used.text }}</span>
-                          </div>
-                        </td>
-                        <td class="status-cell" data-label="状态">
-                          <div class="status-chip-group">
-                            {% if item.ip == state.current_ip %}
-                              <span class="status-chip status-chip-green">当前使用中</span>
-                            {% else %}
-                              <span class="status-chip status-chip-recency {{ last_used.tone_class }}">{{ last_used.label }}</span>
-                            {% endif %}
+                            <span class="last-used-time">{{ usage_window.text }}</span>
                           </div>
                         </td>
                         <td class="action-cell" data-label="操作">

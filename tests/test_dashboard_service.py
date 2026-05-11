@@ -4,6 +4,7 @@ from subprocess import CompletedProcess
 
 from app.config import Settings
 from app.services.dashboard_service import DashboardService
+from app.services.ip_usage_service import IpUsageWindow
 from app.services.public_ip_service import PublicIPv4CacheEntry
 
 
@@ -18,11 +19,11 @@ class FakePublicIPService:
 
 
 class FakeIpUsageService:
-    def __init__(self, usage_map: dict[str, str] | None = None):
-        self.usage_map = usage_map or {}
+    def __init__(self, usage_windows: dict[str, IpUsageWindow] | None = None):
+        self.usage_windows = usage_windows or {}
 
-    def read_usage_map(self) -> dict[str, str]:
-        return self.usage_map
+    def read_usage_windows(self) -> dict[str, IpUsageWindow]:
+        return self.usage_windows
 
 
 def build_settings(tmp_path: Path) -> Settings:
@@ -149,13 +150,20 @@ def test_dashboard_includes_last_used_and_primary_markers(tmp_path: Path):
         settings,
         runner=fake_runner,
         public_ip_service=FakePublicIPService(),
-        ip_usage_service=FakeIpUsageService({"10.0.0.18": "2026-04-24T02:03:04+00:00"}),
+        ip_usage_service=FakeIpUsageService(
+            {
+                "10.0.0.18": IpUsageWindow(
+                    started_at="2026-04-24T02:03:04+00:00",
+                    ended_at="2026-04-24T03:04:05+00:00",
+                )
+            }
+        ),
     )
 
     state = service.build_state()
 
     assert state.primary_ip == "10.0.0.18"
-    assert [(item.ip, item.last_used_at, item.is_primary) for item in state.candidate_items] == [
-        ("10.0.0.11", None, False),
-        ("10.0.0.18", "2026-04-24T02:03:04+00:00", True),
+    assert [(item.ip, item.usage_started_at, item.usage_ended_at, item.is_primary) for item in state.candidate_items] == [
+        ("10.0.0.11", None, None, False),
+        ("10.0.0.18", "2026-04-24T02:03:04+00:00", "2026-04-24T03:04:05+00:00", True),
     ]

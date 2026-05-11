@@ -702,25 +702,21 @@ svg {
 
 .ip-table {
   width: 100%;
-  min-width: 960px;
+  min-width: 900px;
   border-collapse: collapse;
   table-layout: fixed;
 }
 
 .ip-table-col-ip {
-  width: 25%;
+  width: 29%;
 }
 
 .ip-table-col-last-used {
-  width: 31%;
-}
-
-.ip-table-col-status {
-  width: 26%;
+  width: 51%;
 }
 
 .ip-table-col-action {
-  width: 18%;
+  width: 20%;
 }
 
 .ip-table th {
@@ -781,13 +777,6 @@ svg {
   box-shadow: inset 4px 0 0 var(--current-row-border);
 }
 
-.status-chip-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
 .ip-cell-wrap {
   display: flex;
   align-items: center;
@@ -819,7 +808,6 @@ svg {
 }
 
 .last-used-cell,
-.status-cell,
 .action-cell {
   white-space: nowrap;
 }
@@ -851,37 +839,11 @@ svg {
   white-space: nowrap;
 }
 
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 4px 9px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  font-size: 13px;
-  font-weight: 850;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.status-chip-green {
-  color: var(--green);
-  background: var(--green-soft);
-  border-color: var(--green-border);
-}
-
-.status-chip-recency {
-  background: var(--usage-none-soft);
-  border-color: var(--usage-none-border);
-  color: var(--usage-none-text);
-}
-
 .usage-recency-hot {
   color: var(--usage-hot-text);
 }
 
 .last-used-wrap.usage-recency-hot,
-.status-chip-recency.usage-recency-hot,
 .next-ip-value.usage-recency-hot {
   color: var(--usage-hot-text);
 }
@@ -891,13 +853,7 @@ svg {
   border-color: var(--usage-hot-border);
 }
 
-.status-chip-recency.usage-recency-hot {
-  background: var(--usage-hot-soft);
-  border-color: var(--usage-hot-border);
-}
-
 .last-used-wrap.usage-recency-warm,
-.status-chip-recency.usage-recency-warm,
 .next-ip-value.usage-recency-warm {
   color: var(--usage-warm-text);
 }
@@ -907,13 +863,7 @@ svg {
   border-color: var(--usage-warm-border);
 }
 
-.status-chip-recency.usage-recency-warm {
-  background: var(--usage-warm-soft);
-  border-color: var(--usage-warm-border);
-}
-
 .last-used-wrap.usage-recency-mild,
-.status-chip-recency.usage-recency-mild,
 .next-ip-value.usage-recency-mild {
   color: var(--usage-mild-text);
 }
@@ -923,13 +873,7 @@ svg {
   border-color: var(--usage-mild-border);
 }
 
-.status-chip-recency.usage-recency-mild {
-  background: var(--usage-mild-soft);
-  border-color: var(--usage-mild-border);
-}
-
 .last-used-wrap.usage-recency-cool,
-.status-chip-recency.usage-recency-cool,
 .next-ip-value.usage-recency-cool {
   color: var(--usage-cool-text);
 }
@@ -939,24 +883,13 @@ svg {
   border-color: var(--usage-cool-border);
 }
 
-.status-chip-recency.usage-recency-cool {
-  background: var(--usage-cool-soft);
-  border-color: var(--usage-cool-border);
-}
-
 .last-used-wrap.usage-recency-none,
-.status-chip-recency.usage-recency-none,
 .next-ip-value.usage-recency-none {
   color: var(--usage-none-text);
 }
 
 .last-used-wrap.usage-recency-none {
   background: var(--usage-none-surface);
-  border-color: var(--usage-none-border);
-}
-
-.status-chip-recency.usage-recency-none {
-  background: var(--usage-none-soft);
   border-color: var(--usage-none-border);
 }
 
@@ -1096,6 +1029,6 @@ svg {
   }
 
   .ip-table {
-    min-width: 920px;
+    min-width: 860px;
   }
 }

@@ -25,6 +25,11 @@ class CandidateIPState:
     ip: str
     last_used_at: str | None
     is_primary: bool
+    usage_ended_at: str | None = None
+
+    @property
+    def usage_started_at(self) -> str | None:
+        return self.last_used_at
 
 
 @dataclass(slots=True)
@@ -75,16 +80,17 @@ class DashboardService:
             errors.append(f"读取公网 IPv4 缓存失败: {exc}")
 
         try:
-            usage_map = self.ip_usage_service.read_usage_map()
+            usage_windows = self.ip_usage_service.read_usage_windows()
         except Exception as exc:
-            usage_map = {}
-            errors.append(f"读取最近使用时间记录失败: {exc}")
+            usage_windows = {}
+            errors.append(f"读取使用时间记录失败: {exc}")
 
         candidate_items = [
             CandidateIPState(
                 ip=ip_address,
-                last_used_at=usage_map.get(ip_address),
+                last_used_at=usage_windows[ip_address].started_at if ip_address in usage_windows else None,
                 is_primary=ip_address == self.settings.primary_ip,
+                usage_ended_at=usage_windows[ip_address].ended_at if ip_address in usage_windows else None,
             )
             for ip_address in candidate_ips
         ]

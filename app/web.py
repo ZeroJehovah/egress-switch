@@ -78,6 +78,10 @@ def _parse_candidate_last_used_at(raw_value: str) -> datetime:
 
 
 def _describe_last_used(raw_value: str | None, *, now: datetime | None = None) -> LastUsedDisplayState:
+    return _describe_usage_recency(raw_value, now=now)
+
+
+def _describe_usage_recency(raw_value: str | None, *, now: datetime | None = None) -> LastUsedDisplayState:
     if not raw_value:
         return LastUsedDisplayState(
             text=LAST_USED_TIME_EMPTY_TEXT,
@@ -134,6 +138,51 @@ def _describe_last_used(raw_value: str | None, *, now: datetime | None = None) -
     )
 
 
+def _describe_usage_window(
+    started_at: str | None,
+    ended_at: str | None,
+    *,
+    is_current: bool = False,
+    now: datetime | None = None,
+) -> LastUsedDisplayState:
+    if not started_at:
+        if is_current:
+            return LastUsedDisplayState(
+                text=f"{LAST_USED_TIME_EMPTY_TEXT} - 当前使用中",
+                tone_class="usage-recency-hot",
+                label="1天内使用过",
+            )
+
+        return LastUsedDisplayState(
+            text=LAST_USED_TIME_EMPTY_TEXT,
+            tone_class="usage-recency-none",
+            label=LAST_USED_STATUS_NEVER_LABEL,
+        )
+
+    formatted_start = _format_display_datetime(started_at) or started_at
+    if is_current:
+        return LastUsedDisplayState(
+            text=f"{formatted_start} - 当前使用中",
+            tone_class="usage-recency-hot",
+            label="1天内使用过",
+        )
+
+    if not ended_at:
+        return LastUsedDisplayState(
+            text=f"{formatted_start} - {LAST_USED_TIME_EMPTY_TEXT}",
+            tone_class="usage-recency-none",
+            label=LAST_USED_STATUS_NEVER_LABEL,
+        )
+
+    usage_recency = _describe_usage_recency(ended_at, now=now)
+    formatted_end = _format_display_datetime(ended_at) or ended_at
+    return LastUsedDisplayState(
+        text=f"{formatted_start} - {formatted_end}",
+        tone_class=usage_recency.tone_class,
+        label=usage_recency.label,
+    )
+
+
 def get_next_candidate_ip(
     current_ip: str | None,
     candidate_items: list[CandidateIPState],
@@ -150,14 +199,14 @@ def get_next_candidate_ip(
     if not eligible_items:
         return None
 
-    never_used_ips = [item.ip for item in eligible_items if item.last_used_at is None]
+    never_used_ips = [item.ip for item in eligible_items if item.usage_started_at is None]
     if never_used_ips:
         return chooser(never_used_ips)
 
     return min(
         eligible_items,
         key=lambda item: (
-            _parse_candidate_last_used_at(item.last_used_at or ""),
+            _parse_candidate_last_used_at(item.usage_ended_at or item.usage_started_at or ""),
             ipaddress.IPv4Address(item.ip),
         ),
     ).ip
@@ -308,6 +357,7 @@ def create_app(
     app.extensions["public_ip_service"] = getattr(resolved_dashboard_service, "public_ip_service", PublicIPv4Service(settings))
     app.add_template_global(_build_static_asset_url, name="static_asset_url")
     app.add_template_global(_describe_last_used, name="describe_last_used")
+    app.add_template_global(_describe_usage_window, name="describe_usage_window")
     app.add_template_global(_format_display_datetime, name="format_display_datetime")
 
     @app.before_request
@@ -323,7 +373,15 @@ def create_app(
         state = current_app.extensions["dashboard_service"].build_state()
         next_ip = get_next_candidate_ip(state.current_ip, state.candidate_items)
         next_candidate = next((item for item in state.candidate_items if item.ip == next_ip), None)
-        next_last_used = _describe_last_used(next_candidate.last_used_at) if next_candidate else None
+        next_last_used = (
+            _describe_usage_window(
+                next_candidate.usage_started_at,
+                next_candidate.usage_ended_at,
+                is_current=next_candidate.ip == state.current_ip,
+            )
+            if next_candidate
+            else None
+        )
         return render_template(
             "index.html",
             state=state,

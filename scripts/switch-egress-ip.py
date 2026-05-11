@@ -51,6 +51,10 @@ def main() -> int:
     target_ip = normalize_target_ip(sys.argv[1], settings.subnet_prefix)
     switcher = NativeSwitcher(settings)
     ip_usage_service = IpUsageService(settings)
+    try:
+        previous_ip = read_direct_bind_address(settings.singbox_config_path)
+    except Exception:
+        previous_ip = None
 
     try:
         outcome = switcher.switch_ip(target_ip)
@@ -59,9 +63,9 @@ def main() -> int:
         return 1
 
     try:
-        ip_usage_service.mark_used(outcome.target_ip)
+        ip_usage_service.mark_switch(previous_ip, outcome.target_ip)
     except IpUsageError as exc:
-        print(f"警告: 最近使用时间记录写入失败: {exc}", file=sys.stderr)
+        print(f"警告: 使用时间记录写入失败: {exc}", file=sys.stderr)
 
     print(f"备份配置到: {outcome.backup_path}")
     print(f"写入 sing-box 出站绑定地址: {outcome.target_ip}")

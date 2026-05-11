@@ -9,6 +9,7 @@ from app.web import (
     LastUsedDisplayState,
     SanitizedWSGIRequestHandler,
     _describe_last_used,
+    _describe_usage_window,
     _sanitize_request_log_text,
     create_app,
     get_next_candidate_ip,
@@ -33,6 +34,7 @@ class FakeDashboardService:
                     ip="10.0.0.11",
                     last_used_at="2026-04-23T10:00:00+00:00",
                     is_primary=True,
+                    usage_ended_at="2026-04-23T12:00:00+00:00",
                 ),
             ],
             errors=[],
@@ -148,8 +150,10 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'class="quick-action-button"' in body
     assert 'class="quick-action-button quick-action-button-primary"' in body
     assert "tile-symbol" not in body
-    assert "最近使用时间" in body
-    assert "2026-04-23 18:00:00" in body
+    assert "使用时间" in body
+    assert "最近使用时间" not in body
+    assert "2026-04-24 18:00:00 - 当前使用中" in body
+    assert "2026-04-23 18:00:00 - 2026-04-23 20:00:00" in body
     assert "last-used-wrap" in body
     assert "last-used-icon" in body
     assert "当前出站 IP（实际）" not in body
@@ -162,18 +166,20 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert 'class="ip-row-current"' in body
     assert 'class="ip-table-col ip-table-col-ip"' in body
     assert 'class="ip-table-col ip-table-col-last-used"' in body
-    assert 'class="ip-table-col ip-table-col-status"' in body
+    assert 'class="ip-table-col ip-table-col-status"' not in body
     assert 'class="ip-table-col ip-table-col-action"' in body
     assert 'class="count-badge">2 个地址<' in body
     assert 'data-label="操作"' in body
+    assert '<th>状态</th>' not in body
+    assert 'data-label="状态"' not in body
     assert "当前使用中" in body
-    assert _describe_last_used("2026-04-23T10:00:00+00:00").label in body
+    assert _describe_last_used("2026-04-23T12:00:00+00:00").label not in body
     assert "主IP" in body
     assert "下一个" in body
     assert "下一个 IP（最长未使用）" not in body
     assert "下一个 IP" in body
     assert "优先切换到最长未使用的候选 IP" in body
-    assert f'next-ip-value {_describe_last_used("2026-04-23T10:00:00+00:00").tone_class}' in body
+    assert f'next-ip-value {_describe_last_used("2026-04-23T12:00:00+00:00").tone_class}' in body
     assert "next-ip-arrow" not in body
     assert "10.0.0.11" in body
     assert 'action="/switch"' in body
@@ -192,7 +198,7 @@ def test_index_page_renders_dashboard(tmp_path: Path):
     assert "从未切换过" not in body
 
 
-def test_index_page_shows_never_used_status_without_last_used_copy(tmp_path: Path):
+def test_index_page_shows_never_used_usage_without_last_used_copy(tmp_path: Path):
     class NeverUsedDashboardService:
         def build_state(self):
             return DashboardState(
@@ -230,7 +236,7 @@ def test_index_page_shows_never_used_status_without_last_used_copy(tmp_path: Pat
     assert response.status_code == 200
     body = response.get_data(as_text=True)
     assert '<span class="last-used-time">--</span>' in body
-    assert ">从未使用过<" in body
+    assert ">从未使用过<" not in body
     assert "从未切换过" not in body
 
 
@@ -443,6 +449,31 @@ def test_get_next_candidate_ip_prefers_never_used_candidates():
     ) == "10.0.0.12"
 
 
+def test_get_next_candidate_ip_uses_usage_end_time():
+    assert get_next_candidate_ip(
+        "10.0.0.12",
+        [
+            CandidateIPState(
+                ip="10.0.0.10",
+                last_used_at="2026-04-21T10:00:00+00:00",
+                usage_ended_at="2026-04-24T10:00:00+00:00",
+                is_primary=False,
+            ),
+            CandidateIPState(
+                ip="10.0.0.11",
+                last_used_at="2026-04-23T10:00:00+00:00",
+                usage_ended_at="2026-04-23T11:00:00+00:00",
+                is_primary=False,
+            ),
+            CandidateIPState(
+                ip="10.0.0.12",
+                last_used_at="2026-04-24T10:00:00+00:00",
+                is_primary=False,
+            ),
+        ],
+    ) == "10.0.0.11"
+
+
 def test_describe_last_used_uses_four_recency_tiers():
     now = datetime(2026, 4, 24, 12, 0, tzinfo=timezone.utc)
 
@@ -473,6 +504,32 @@ def test_describe_last_used_marks_never_used_as_neutral():
         text="--",
         tone_class="usage-recency-none",
         label="从未使用过",
+    )
+
+
+def test_describe_usage_window_displays_range_and_uses_end_time_for_tone():
+    now = datetime(2026, 4, 24, 12, 0, tzinfo=timezone.utc)
+
+    assert _describe_usage_window(
+        "2026-04-22T11:00:00+00:00",
+        "2026-04-24T11:00:00+00:00",
+        now=now,
+    ) == LastUsedDisplayState(
+        text="2026-04-22 19:00:00 - 2026-04-24 19:00:00",
+        tone_class="usage-recency-hot",
+        label="1天内使用过",
+    )
+
+
+def test_describe_usage_window_displays_current_usage():
+    assert _describe_usage_window(
+        "2026-04-24T10:00:00+00:00",
+        None,
+        is_current=True,
+    ) == LastUsedDisplayState(
+        text="2026-04-24 18:00:00 - 当前使用中",
+        tone_class="usage-recency-hot",
+        label="1天内使用过",
     )
 
 
